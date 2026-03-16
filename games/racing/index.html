@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highway Racer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            text-align: center;
+        }
+        #gameCanvas {
+            border: 3px solid #8a6a4a;
+            border-radius: 8px;
+            background: #333;
+        }
+        #score {
+            color: #ffaa00;
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ffaa00;
+        }
+        #instructions {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Distance: 0m</div>
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
+        <div id="instructions">← → Change Lanes | ↑ Speed Up | ↓ Slow Down</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+
+        let distance = 0;
+        let gameOver = false;
+        let keys = {};
+
+        const road = {
+            x: 50,
+            width: 300,
+            lanes: 4,
+            lineOffset: 0
+        };
+
+        const player = {
+            lane: 1,
+            x: 0,
+            y: canvas.height - 100,
+            width: 50,
+            height: 80,
+            speed: 5,
+            maxSpeed: 12,
+            minSpeed: 3,
+            color: '#ff4444'
+        };
+
+        let traffic = [];
+        let trafficSpeed = 3;
+        let spawnRate = 100;
+        let frameCount = 0;
+
+        function getLaneX(lane) {
+            const laneWidth = road.width / road.lanes;
+            return road.x + lane * laneWidth + laneWidth / 2 - player.width / 2;
+        }
+
+        player.x = getLaneX(player.lane);
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (gameOver && e.key === 'Enter') {
+                resetGame();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function resetGame() {
+            distance = 0;
+            gameOver = false;
+            traffic = [];
+            trafficSpeed = 3;
+            spawnRate = 100;
+            player.lane = 1;
+            player.x = getLaneX(player.lane);
+            player.speed = 5;
+            frameCount = 0;
+            road.lineOffset = 0;
+            scoreEl.textContent = 'Distance: 0m';
+        }
+
+        function spawnTraffic() {
+            const lane = Math.floor(Math.random() * road.lanes);
+            const carLength = Math.random() * 30 + 60;
+            traffic.push({
+                lane: lane,
+                x: getLaneX(lane),
+                y: -carLength,
+                width: player.width,
+                height: carLength,
+                speed: Math.random() * 2 + 2,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`
+            });
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            if (keys['ArrowLeft'] && player.lane > 0) {
+                player.lane -= 0.15;
+                if (player.lane < Math.floor(player.lane)) player.lane = Math.floor(player.lane);
+            }
+            if (keys['ArrowRight'] && player.lane < road.lanes - 1) {
+                player.lane += 0.15;
+                if (player.lane > Math.ceil(player.lane)) player.lane = Math.ceil(player.lane);
+            }
+            player.x = getLaneX(Math.round(player.lane));
+
+            if (keys['ArrowUp'] && player.speed < player.maxSpeed) {
+                player.speed += 0.1;
+            }
+            if (keys['ArrowDown'] && player.speed > player.minSpeed) {
+                player.speed -= 0.1;
+            }
+
+            road.lineOffset += player.speed;
+            if (road.lineOffset > 40) road.lineOffset = 0;
+
+            distance += Math.floor(player.speed / 2);
+            scoreEl.textContent = 'Distance: ' + distance + 'm';
+
+            frameCount++;
+            if (frameCount % Math.floor(spawnRate / player.speed * 3) === 0) {
+                spawnTraffic();
+            }
+
+            for (let i = traffic.length - 1; i >= 0; i--) {
+                let car = traffic[i];
+                car.y += car.speed + player.speed * 0.5;
+
+                if (
+                    player.x < car.x + car.width &&
+                    player.x + player.width > car.x &&
+                    player.y < car.y + car.height &&
+                    player.y + player.height > car.y
+                ) {
+                    gameOver = true;
+                }
+
+                if (car.y > canvas.height) {
+                    traffic.splice(i, 1);
+                    distance += 5;
+                    scoreEl.textContent = 'Distance: ' + distance + 'm';
+
+                    if (distance % 100 === 0) {
+                        trafficSpeed += 0.5;
+                        spawnRate = Math.max(40, spawnRate - 3);
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#444';
+            ctx.fillRect(road.x, 0, road.width, canvas.height);
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(road.x - 5, 0, 5, canvas.height);
+            ctx.fillRect(road.x + road.width, 0, 5, canvas.height);
+
+            ctx.fillStyle = '#ffaa00';
+            for (let i = -40; i < canvas.height; i += 40) {
+                for (let lane = 1; lane < road.lanes; lane++) {
+                    let x = road.x + lane * (road.width / road.lanes) - 2;
+                    ctx.fillRect(x, i + road.lineOffset, 4, 20);
+                }
+            }
+
+            traffic.forEach(car => {
+                ctx.fillStyle = car.color;
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+                
+                ctx.fillStyle = '#ff6666';
+                ctx.fillRect(car.x + 5, car.y + car.height - 10, 10, 5);
+                ctx.fillRect(car.x + car.width - 15, car.y + car.height - 10, 10, 5);
+            });
+
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            ctx.fillStyle = '#660000';
+            ctx.fillRect(player.x + 5, player.y + player.height - 10, 10, 5);
+            ctx.fillRect(player.x + player.width - 15, player.y + player.height - 10, 10, 5);
+            
+            ctx.fillStyle = '#88ccff';
+            ctx.fillRect(player.x + 5, player.y + 5, 12, 8);
+            ctx.fillRect(player.x + player.width - 17, player.y + 5, 12, 8);
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('CRASH!', canvas.width / 2, canvas.height / 2 - 20);
+                
+                ctx.font = '20px Arial';
+                ctx.fillText('Distance: ' + distance + 'm', canvas.width / 2, canvas.height / 2 + 20);
+                ctx.fillText('Press Enter to Restart', canvas.width / 2, canvas.height / 2 + 60);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

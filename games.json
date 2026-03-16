@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Snake Game",
+    "url": "/games/snake/"
+  },
+  {
+    "title": "Flappy Bird",
+    "url": "/games/flappy/"
+  },
+  {
+    "title": "Block Breaker",
+    "url": "/games/block-breaker/"
+  },
+  {
+    "title": "Game 1",
+    "url": "/games/game1/"
+  },
+  {
+    "title": "Space Shooter",
+    "url": "/games/space-shooter/"
+  },
+  {
+    "title": "Platform Jumper",
+    "url": "/games/platform-jumper/"
+  },
+  {
+    "title": "Highway Racer",
+    "url": "/games/racing/"
+  }
+]
