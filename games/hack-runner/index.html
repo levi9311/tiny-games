@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Hack Runner - Cyberpunk Endless Runner | PlayPixelCraft</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <meta name="description" content="Hack Runner - A cyberpunk endless runner game by PlayPixelCraft. Sprint through the neon data stream, dodge obstacles, collect energy, and survive as long as you can. Free, no download required.">
+    <meta name="keywords" content="runner game, endless runner, cyberpunk game, browser game, HTML5 game, casual game, tap game, hack runner, PlayPixelCraft">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/games/hack-runner/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Hack Runner - Cyberpunk Endless Runner">
+    <meta property="og:description" content="Sprint through the neon data stream! Dodge obstacles, collect energy, survive as long as you can.">
+    <meta property="og:url" content="https://playpixelcraft.com/games/hack-runner/">
+    <meta property="og:image" content="https://playpixelcraft.com/games/hack-runner/thumb.svg">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hack Runner - Cyberpunk Endless Runner">
+    <meta name="twitter:description" content="Sprint through the neon data stream! Dodge obstacles and collect energy.">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Hack Runner",
+      "description": "A cyberpunk endless runner game. Sprint through the neon data stream, dodge obstacles, collect energy, and survive!",
+      "url": "https://playpixelcraft.com/games/hack-runner/",
+      "image": "https://playpixelcraft.com/games/hack-runner/thumb.svg",
+      "genre": ["Endless Runner", "Action Game", "Casual Game"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "playMode": ["SinglePlayer"],
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "author": { "@type": "Organization", "name": "PlayPixelCraft", "url": "https://playpixelcraft.com/" },
+      "datePublished": "2026-03-17",
+      "inLanguage": "en-US"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://playpixelcraft.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Hack Runner", "item": "https://playpixelcraft.com/games/hack-runner/" }
+      ]
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { bg: '#0a0a0a', panel: '#111118', cyan: '#00ffff', magenta: '#ff00ff', yellow: '#ffee00', pink: '#ff2d95' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .neon-cyan { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
+        .neon-magenta { color: #f0f; text-shadow: 0 0 5px #f0f, 0 0 10px #f0f; }
+        .neon-yellow { color: #ff0; text-shadow: 0 0 5px #ff0, 0 0 10px #ff0; }
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.015) 2px, rgba(0,255,255,0.015) 4px);
+            pointer-events: none;
+            z-index: 100;
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid rgba(0,255,255,0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,255,255,0.15);
+        }
+        .cyber-btn {
+            padding: 12px 32px; font-size: 1.1rem; font-weight: 700; color: #0ff;
+            background: transparent; border: 2px solid #0ff; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            transition: all 0.2s;
+        }
+        .cyber-btn:hover { background: rgba(0,255,255,0.15); box-shadow: 0 0 20px rgba(0,255,255,0.4); color: #fff; }
+        .cyber-btn:active { transform: scale(0.96); }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(17,17,24,0.95), rgba(10,10,10,0.95));
+            border: 1px solid rgba(0,255,255,0.2); border-radius: 4px; padding: 6px 12px;
+        }
+        @media (max-width: 480px) { .cyber-btn { padding: 10px 20px; font-size: 0.95rem; } }
+        .seo-panel {
+            background: linear-gradient(135deg, rgba(17,17,24,0.9), rgba(10,10,10,0.9));
+            border: 1px solid rgba(0,255,255,0.1); border-radius: 8px;
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease;
+            padding: 0 16px; margin: 0;
+        }
+        .seo-panel.open { max-height: 600px; padding: 16px; margin: 12px 0; }
+        .seo-toggle {
+            color: #0ff; opacity: 0.5; font-size: 12px; cursor: pointer;
+            transition: opacity 0.2s; text-decoration: underline; text-underline-offset: 3px;
+        }
+        .seo-toggle:hover { opacity: 1; }
+        .game-footer { border-top: 1px solid rgba(0,255,255,0.1); padding: 12px 16px; margin-top: 8px; }
+        /* Touch controls */
+        .touch-controls {
+            display: none;
+            gap: 12px;
+            padding: 8px 0 16px;
+        }
+        .touch-btn {
+            width: 64px; height: 64px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,255,255,0.08);
+            border: 2px solid rgba(0,255,255,0.3);
+            border-radius: 12px;
+            font-size: 28px;
+            color: #0ff;
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .touch-btn:active {
+            background: rgba(0,255,255,0.25);
+            box-shadow: 0 0 15px rgba(0,255,255,0.4);
+            transform: scale(0.92);
+        }
+        @media (pointer: coarse) { .touch-controls { display: flex !important; } }
+    </style>
+</head>
+<body class="text-white scanlines">
+    <a href="/" class="fixed top-3 left-3 z-50 opacity-60 hover:opacity-100 transition-opacity" title="PlayPixelCraft">
+        <img src="/assets/logo.svg" alt="PlayPixelCraft" class="h-6 sm:h-7">
+    </a>
+
+    <div class="flex flex-col items-center justify-center min-h-screen p-3 sm:p-4">
+
+        <!-- HUD -->
+        <div id="hud" class="hidden w-full max-w-lg flex justify-between items-center mb-1 gap-2">
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Distance</div>
+                <div id="hudDist" class="text-lg font-bold neon-cyan">0m</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Energy</div>
+                <div id="hudEnergy" class="text-lg font-bold neon-yellow">⚡0</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Speed</div>
+                <div id="hudSpeed" class="text-lg font-bold neon-magenta">x1.0</div>
+            </div>
+        </div>
+
+        <!-- SEO Panel -->
+        <div class="w-full max-w-lg">
+            <div class="flex justify-center">
+                <span class="seo-toggle" onclick="toggleSEO()">About this game ▾</span>
+            </div>
+            <div id="seoPanel" class="seo-panel">
+                <h2 class="text-lg font-bold neon-cyan mb-2">Hack Runner - Cyberpunk Endless Runner</h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-3">
+                    Hack Runner is a free browser-based endless runner set in a cyberpunk data stream. Sprint through neon-lit corridors, dodge firewalls and data barriers, collect energy orbs, and push your reflexes to the limit. How far can you run?
+                </p>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">🎮 Controls</h3>
+                <ul class="text-gray-400 text-sm space-y-1 mb-3 list-none">
+                    <li>🔸 <strong>Jump:</strong> Tap screen, press Space, or swipe up</li>
+                    <li>🔸 <strong>Move Left:</strong> Press ← or swipe left</li>
+                    <li>🔸 <strong>Move Right:</strong> Press → or swipe right</li>
+                    <li>🔸 <strong>On mobile:</strong> Use the on-screen touch buttons</li>
+                </ul>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">⚡ Tips</h3>
+                <ul class="text-gray-400 text-sm space-y-1 mb-3 list-none">
+                    <li>✦ Speed increases over time — stay alert!</li>
+                    <li>✦ Collect ⚡ energy orbs for bonus points</li>
+                    <li>✦ Obstacles come in patterns — learn to anticipate them</li>
+                    <li>✦ Double-tap jump at the right moment to clear tall barriers</li>
+                </ul>
+                <div class="mt-3 pt-3 border-t border-gray-800">
+                    <p class="text-gray-500 text-xs">
+                        <strong class="text-gray-400">PlayPixelCraft</strong> — AI-generated browser games. No download, no sign-up. Embed this game on your site for free.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Touch Controls (mobile) -->
+        <div id="touchControls" class="touch-controls w-full max-w-lg justify-center items-center" style="display:none;">
+            <button class="touch-btn" id="btnLeft">⬅</button>
+            <button class="touch-btn" id="btnJump">⬆</button>
+            <button class="touch-btn" id="btnRight">➡</button>
+        </div>
+
+        <!-- Menu -->
+        <div id="menuScreen" class="absolute flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-3xl sm:text-5xl font-black neon-cyan mb-2 tracking-wider">HACK RUNNER</h1>
+            <p class="text-gray-400 text-sm sm:text-base mb-1">🏃 CYBERPUNK ENDLESS RUNNER ⚡</p>
+            <div class="my-4 sm:my-6 text-gray-500 text-xs sm:text-sm space-y-1">
+                <p>🔸 Jump, dodge, and survive the data stream</p>
+                <p>🔸 Collect ⚡ energy for bonus score</p>
+                <p>🔸 Speed increases — how far can you go?</p>
+            </div>
+            <button class="cyber-btn" onclick="startGame()">RUN!</button>
+            <div class="mt-4 stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Best Distance</div>
+                <div id="bestScore" class="text-lg font-bold neon-yellow">0m</div>
+            </div>
+            <!-- Embed -->
+            <div class="mt-5 w-full max-w-xs text-left">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-gray-500 text-xs uppercase tracking-widest">Embed</p>
+                    <button onclick="copyEmbed('hack-runner')" id="embedBtn" class="text-xs px-3 py-1 border border-cyan-800 text-cyan-400 rounded hover:bg-cyan-900/30 transition-colors">Copy Code</button>
+                </div>
+                <textarea readonly class="w-full h-14 bg-black/60 border border-gray-700 rounded text-[10px] text-gray-400 p-2 resize-none font-mono" id="embedCode">&lt;iframe src="https://playpixelcraft.com/games/hack-runner/" width="400" height="700" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</textarea>
+                <p id="embedCopied" class="hidden text-green-400 text-xs mt-1 text-center">✓ Copied!</p>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="overScreen" class="hidden absolute flex flex-col items-center justify-center text-center px-4">
+            <h2 class="text-2xl sm:text-4xl font-black neon-magenta mb-2">SYSTEM CRASH</h2>
+            <div class="my-4 space-y-2">
+                <div class="stat-card">
+                    <div class="text-[10px] uppercase tracking-widest text-gray-500">Distance</div>
+                    <div id="finalDist" class="text-2xl font-bold neon-cyan">0m</div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Energy</div>
+                        <div id="finalEnergy" class="text-lg font-bold neon-yellow">0</div>
+                    </div>
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Max Speed</div>
+                        <div id="finalSpeed" class="text-lg font-bold neon-magenta">x1.0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="cyber-btn" onclick="startGame()">RUN AGAIN</button>
+            <button class="cyber-btn mt-3 !border-gray-600 !text-gray-400" onclick="showMenu()">MENU</button>
+        </div>
+    </div>
+
+    <footer class="game-footer max-w-lg mx-auto w-full">
+        <p class="text-gray-600 text-xs text-center">
+            <strong class="text-gray-500">Hack Runner</strong> — A free cyberpunk endless runner by PlayPixelCraft. Sprint through the data stream on any device. No download.
+        </p>
+    </footer>
+
+    <script>
+    function toggleSEO() { document.getElementById('seoPanel').classList.toggle('open'); }
+    function copyEmbed(slug) {
+        const code = `<iframe src="https://playpixelcraft.com/games/${slug}/" width="400" height="700" frameborder="0" allowfullscreen></iframe>`;
+        navigator.clipboard.writeText(code).then(() => {
+            document.getElementById('embedBtn').textContent = 'Copied!';
+            document.getElementById('embedCopied').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('embedBtn').textContent = 'Copy Code'; document.getElementById('embedCopied').classList.add('hidden'); }, 2000);
+        });
+    }
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // ===== Sizing =====
+    let W, H, LANE_H, GROUND_Y, LANE_Y = [];
+    const LANE_COUNT = 3;
+
+    function resize() {
+        const maxW = Math.min(window.innerWidth - 24, 500);
+        const maxH = Math.min(window.innerHeight - 280, 400);
+        canvas.width = W = maxW;
+        canvas.height = H = maxH;
+        GROUND_Y = H - 20;
+        LANE_H = (GROUND_Y - 40) / LANE_COUNT;
+        LANE_Y = [];
+        for (let i = 0; i < LANE_COUNT; i++) {
+            LANE_Y[i] = 40 + i * LANE_H + LANE_H / 2;
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ===== State =====
+    let state = 'menu';
+    let distance = 0, energy = 0, maxSpeed = 1;
+    let speed = 4, speedMult = 1;
+    let bestDist = parseInt(localStorage.getItem('hackRunnerBest') || '0');
+    document.getElementById('bestScore').textContent = bestDist + 'm';
+
+    // Player
+    const player = {
+        lane: 1, x: 0, y: 0, w: 36, h: 36,
+        vy: 0, jumping: false, jumpH: 0,
+        targetX: 0, alive: true
+    };
+
+    // Obstacles, orbs, particles
+    let obstacles = [], orbs = [], particles = [], bgBuildings = [], bgStars = [];
+    let spawnTimer = 0, orbTimer = 0, frameCount = 0;
+
+    // ===== Background =====
+    function initBg() {
+        bgBuildings = [];
+        for (let i = 0; i < 15; i++) {
+            bgBuildings.push({
+                x: i * 80 + Math.random() * 40,
+                w: 30 + Math.random() * 50,
+                h: 40 + Math.random() * 80,
+                color: `hsl(${180 + Math.random() * 60}, 40%, ${8 + Math.random() * 8}%)`
+            });
+        }
+        bgStars = [];
+        for (let i = 0; i < 30; i++) {
+            bgStars.push({ x: Math.random() * 500, y: Math.random() * 35, s: 0.5 + Math.random() * 1.5 });
+        }
+    }
+    initBg();
+
+    // ===== Obstacles =====
+    const OBS_TYPES = [
+        { emoji: '🔺', w: 30, h: 30, type: 'block' },
+        { emoji: '🧱', w: 50, h: 25, type: 'wall' },
+        { emoji: '💀', w: 28, h: 28, type: 'skull' },
+        { emoji: '📡', w: 26, h: 34, type: 'tower' },
+    ];
+
+    function spawnObstacle() {
+        const t = OBS_TYPES[Math.floor(Math.random() * OBS_TYPES.length)];
+        const lane = Math.floor(Math.random() * LANE_COUNT);
+        obstacles.push({
+            x: W + 20,
+            lane: lane,
+            y: LANE_Y[lane],
+            w: t.w, h: t.h,
+            emoji: t.emoji,
+            type: t.type
+        });
+    }
+
+    function spawnOrb() {
+        const lane = Math.floor(Math.random() * LANE_COUNT);
+        orbs.push({
+            x: W + 20,
+            lane: lane,
+            y: LANE_Y[lane],
+            r: 12,
+            collected: false,
+            anim: 0
+        });
+    }
+
+    // ===== Particles =====
+    function spawnParticles(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const spd = 2 + Math.random() * 4;
+            particles.push({
+                x, y,
+                vx: Math.cos(angle) * spd,
+                vy: Math.sin(angle) * spd - 2,
+                life: 25 + Math.random() * 15,
+                maxLife: 40,
+                color: color,
+                size: 2 + Math.random() * 3
+            });
+        }
+    }
+
+    // ===== Input =====
+    const keys = {};
+    let touchStartX = 0, touchStartY = 0;
+
+    function moveLeft() {
+        if (state !== 'playing' || !player.alive) return;
+        if (player.lane > 0) player.lane--;
+    }
+    function moveRight() {
+        if (state !== 'playing' || !player.alive) return;
+        if (player.lane < LANE_COUNT - 1) player.lane++;
+    }
+    function jump() {
+        if (state !== 'playing' || !player.alive) return;
+        if (!player.jumping) {
+            player.jumping = true;
+            player.vy = -10;
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        keys[e.key] = true;
+        if (e.key === 'ArrowLeft' || e.key === 'a') moveLeft();
+        if (e.key === 'ArrowRight' || e.key === 'd') moveRight();
+        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); jump(); }
+        if (state === 'menu' && (e.key === ' ' || e.key === 'Enter')) startGame();
+        if (state === 'over' && e.key === 'Enter') startGame();
+    });
+    document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    // Touch swipe on canvas
+    canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: false });
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        if (Math.abs(dx) < 15 && Math.abs(dy) < 15) { jump(); return; }
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx < -20) moveLeft(); else if (dx > 20) moveRight();
+        } else {
+            if (dy < -20) jump();
+        }
+    }, { passive: false });
+
+    // Touch buttons
+    document.getElementById('btnLeft').addEventListener('touchstart', e => { e.preventDefault(); moveLeft(); });
+    document.getElementById('btnJump').addEventListener('touchstart', e => { e.preventDefault(); jump(); });
+    document.getElementById('btnRight').addEventListener('touchstart', e => { e.preventDefault(); moveRight(); });
+
+    // ===== Game Logic =====
+    function startGame() {
+        state = 'playing';
+        distance = 0; energy = 0; maxSpeed = 1;
+        speed = 4; speedMult = 1; frameCount = 0;
+        obstacles = []; orbs = []; particles = [];
+        spawnTimer = 0; orbTimer = 0;
+        player.lane = 1; player.jumping = false; player.jumpH = 0; player.vy = 0; player.alive = true;
+        initBg();
+
+        document.getElementById('menuScreen').classList.add('hidden');
+        document.getElementById('overScreen').classList.add('hidden');
+        document.getElementById('hud').classList.remove('hidden');
+        document.getElementById('hud').style.display = 'flex';
+        document.getElementById('touchControls').style.display = '';
+        updateHUD();
+    }
+
+    function endGame() {
+        state = 'over';
+        player.alive = false;
+        spawnParticles(player.x, player.y, '#ff0040', 25);
+        if (distance > bestDist) {
+            bestDist = Math.floor(distance);
+            localStorage.setItem('hackRunnerBest', bestDist);
+            document.getElementById('bestScore').textContent = bestDist + 'm';
+        }
+        document.getElementById('finalDist').textContent = Math.floor(distance) + 'm';
+        document.getElementById('finalEnergy').textContent = energy;
+        document.getElementById('finalSpeed').textContent = 'x' + maxSpeed.toFixed(1);
+        document.getElementById('overScreen').classList.remove('hidden');
+        document.getElementById('hud').classList.add('hidden');
+        document.getElementById('touchControls').style.display = 'none';
+    }
+
+    function showMenu() {
+        state = 'menu';
+        particles = [];
+        document.getElementById('overScreen').classList.add('hidden');
+        document.getElementById('menuScreen').classList.remove('hidden');
+        document.getElementById('touchControls').style.display = 'none';
+    }
+
+    function updateHUD() {
+        document.getElementById('hudDist').textContent = Math.floor(distance) + 'm';
+        document.getElementById('hudEnergy').textContent = '⚡' + energy;
+        document.getElementById('hudSpeed').textContent = 'x' + speedMult.toFixed(1);
+    }
+
+    // ===== Update =====
+    function update() {
+        if (state !== 'playing' || !player.alive) return;
+
+        frameCount++;
+
+        // Speed up
+        speedMult = 1 + Math.floor(distance / 300) * 0.2;
+        speedMult = Math.min(speedMult, 4);
+        speed = 4 + (speedMult - 1) * 2;
+        if (speedMult > maxSpeed) maxSpeed = speedMult;
+
+        distance += speed * 0.06;
+
+        // Player lane movement (smooth)
+        player.targetX = 60;
+        player.x += (player.targetX - player.x) * 0.3;
+        player.y = LANE_Y[player.lane];
+
+        // Jump
+        if (player.jumping) {
+            player.vy += 0.6; // gravity
+            player.jumpH += player.vy;
+            if (player.jumpH >= 0) {
+                player.jumpH = 0;
+                player.vy = 0;
+                player.jumping = false;
+            }
+        }
+
+        // Spawn obstacles
+        spawnTimer++;
+        const spawnInterval = Math.max(30, 70 - speedMult * 8);
+        if (spawnTimer >= spawnInterval) {
+            spawnObstacle();
+            // Sometimes spawn double
+            if (Math.random() < 0.3 + speedMult * 0.05) {
+                const lane2 = (obstacles[obstacles.length-1].lane + 1 + Math.floor(Math.random() * (LANE_COUNT - 1))) % LANE_COUNT;
+                const t = OBS_TYPES[Math.floor(Math.random() * OBS_TYPES.length)];
+                obstacles.push({ x: W + 20 + 30, lane: lane2, y: LANE_Y[lane2], w: t.w, h: t.h, emoji: t.emoji, type: t.type });
+            }
+            spawnTimer = 0;
+        }
+
+        // Spawn orbs
+        orbTimer++;
+        if (orbTimer >= 45) {
+            if (Math.random() < 0.6) spawnOrb();
+            orbTimer = 0;
+        }
+
+        // Update obstacles
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            const o = obstacles[i];
+            o.x -= speed;
+
+            // Collision
+            const px = player.x, py = player.y + player.jumpH;
+            if (px - player.w/2 < o.x + o.w/2 && px + player.w/2 > o.x - o.w/2 &&
+                py - player.h/2 < o.y + o.h/2 && py + player.h/2 > o.y - o.h/2 && player.jumpH > -15) {
+                endGame();
+                return;
+            }
+
+            if (o.x < -60) obstacles.splice(i, 1);
+        }
+
+        // Update orbs
+        for (let i = orbs.length - 1; i >= 0; i--) {
+            const o = orbs[i];
+            o.x -= speed;
+            o.anim += 0.05;
+
+            const px = player.x, py = player.y + player.jumpH;
+            const dx = px - o.x, dy = py - o.y;
+            if (Math.sqrt(dx*dx + dy*dy) < o.r + player.w/2 && !o.collected) {
+                o.collected = true;
+                energy++;
+                spawnParticles(o.x, o.y, '#ffee00', 8);
+            }
+
+            if (o.collected || o.x < -30) orbs.splice(i, 1);
+        }
+
+        // Particles
+        particles = particles.filter(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life--;
+            return p.life > 0;
+        });
+
+        // Background scroll
+        bgBuildings.forEach(b => { b.x -= speed * 0.2; if (b.x + b.w < 0) { b.x = W + Math.random() * 100; b.h = 40 + Math.random() * 80; } });
+        bgStars.forEach(s => { s.x -= speed * 0.05; if (s.x < 0) s.x = W; });
+
+        if (frameCount % 10 === 0) updateHUD();
+    }
+
+    // ===== Render =====
+    function drawBg() {
+        // Sky gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#05051a');
+        grad.addColorStop(0.3, '#0a0a2e');
+        grad.addColorStop(1, '#0f0f1a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Stars
+        ctx.fillStyle = '#fff';
+        bgStars.forEach(s => {
+            ctx.globalAlpha = 0.3 + Math.sin(frameCount * 0.02 + s.x) * 0.3;
+            ctx.fillRect(s.x, s.y, s.s, s.s);
+        });
+        ctx.globalAlpha = 1;
+
+        // City silhouette
+        bgBuildings.forEach(b => {
+            ctx.fillStyle = b.color;
+            ctx.fillRect(b.x, GROUND_Y - b.h, b.w, b.h);
+            // Windows
+            ctx.fillStyle = 'rgba(0,255,255,0.15)';
+            for (let wy = GROUND_Y - b.h + 8; wy < GROUND_Y - 4; wy += 12) {
+                for (let wx = b.x + 5; wx < b.x + b.w - 5; wx += 10) {
+                    if (Math.random() > 0.4) ctx.fillRect(wx, wy, 5, 6);
+                }
+            }
+        });
+
+        // Ground
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+        // Ground line glow
+        const groundGrad = ctx.createLinearGradient(0, GROUND_Y - 2, 0, GROUND_Y + 4);
+        groundGrad.addColorStop(0, 'rgba(0,255,255,0.4)');
+        groundGrad.addColorStop(1, 'rgba(0,255,255,0)');
+        ctx.fillStyle = groundGrad;
+        ctx.fillRect(0, GROUND_Y - 2, W, 6);
+
+        // Lane markers
+        ctx.strokeStyle = 'rgba(0,255,255,0.06)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([10, 10]);
+        for (let i = 1; i < LANE_COUNT; i++) {
+            const ly = 40 + i * LANE_H;
+            ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Speed lines
+        ctx.strokeStyle = 'rgba(0,255,255,0.1)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+            const ly = 40 + Math.random() * (GROUND_Y - 40);
+            const lx = Math.random() * W;
+            ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - 20 - speed * 3, ly); ctx.stroke();
+        }
+    }
+
+    function drawPlayer() {
+        const px = player.x, py = player.y + player.jumpH;
+
+        // Shadow
+        if (player.jumping) {
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = '#0ff';
+            ctx.beginPath();
+            ctx.ellipse(player.x, player.y + player.h/2 + 2, player.w/2, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        // Glow
+        ctx.shadowColor = '#00ffff';
+        ctx.shadowBlur = 15;
+
+        // Emoji runner (alternate frames for animation)
+        const runFrame = Math.floor(frameCount / 6) % 4;
+        const runners = ['🤖', '🏃', '🤖', '🏃'];
+        ctx.font = `${player.h}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(player.alive ? runners[runFrame] : '💀', px, py);
+
+        ctx.shadowBlur = 0;
+
+        // Trail particles (when running)
+        if (player.alive && frameCount % 3 === 0) {
+            spawnParticles(px - 10, py, 'rgba(0,255,255,0.5)', 1);
+        }
+    }
+
+    function drawObstacles() {
+        obstacles.forEach(o => {
+            // Glow
+            ctx.shadowColor = o.type === 'tower' ? '#ff00ff' : '#ff0040';
+            ctx.shadowBlur = 12;
+
+            // Red tint bg
+            ctx.fillStyle = 'rgba(255,0,64,0.1)';
+            ctx.fillRect(o.x - o.w/2 - 3, o.y - o.h/2 - 3, o.w + 6, o.h + 6);
+
+            // Emoji
+            ctx.font = `${Math.min(o.w, o.h + 4)}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(o.emoji, o.x, o.y);
+
+            ctx.shadowBlur = 0;
+        });
+    }
+
+    function drawOrbs() {
+        orbs.forEach(o => {
+            const pulse = 1 + Math.sin(o.anim * 4) * 0.15;
+            const r = o.r * pulse;
+
+            // Glow
+            const grad = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, r * 2);
+            grad.addColorStop(0, 'rgba(255,238,0,0.3)');
+            grad.addColorStop(1, 'rgba(255,238,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, r * 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.fillStyle = '#ffee00';
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, r * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sparkle emoji
+            ctx.font = `${r * 1.2}px serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚡', o.x, o.y);
+        });
+    }
+
+    function drawParticles() {
+        particles.forEach(p => {
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+    }
+
+    function drawHUD() {
+        // Distance marker on ground
+        const dist100 = Math.floor(distance / 100) * 100;
+        ctx.fillStyle = 'rgba(0,255,255,0.3)';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        if (dist100 > 0) ctx.fillText(dist100 + 'm', W / 2, GROUND_Y + 14);
+    }
+
+    // ===== Game Loop =====
+    function gameLoop() {
+        ctx.clearRect(0, 0, W, H);
+        drawBg();
+
+        if (state === 'playing' || state === 'over') {
+            update();
+            drawOrbs();
+            drawObstacles();
+            drawPlayer();
+            drawParticles();
+            drawHUD();
+        }
+
+        // Always draw background in menu
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+    </script>
+</body>
+</html>
+
+<section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800">
+  <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Hack Runner</h2>
+  <p class="text-gray-300 text-sm leading-relaxed mb-4">Hack Runner is a high-speed endless runner game set in a cyberpunk neon data stream. Sprint through an endless corridor of digital obstacles, each one glowing with dangerous intensity. Your reflexes are your only weapon — swipe, tap, or use arrow keys to switch lanes and dodge barriers, firewalls, and corrupted data nodes flying at you from every direction. Along the way, collect glowing energy fragments to boost your score and trigger satisfying visual explosions. The pace never stops and the challenges keep coming, making every run a fresh test of concentration and reaction time. As a free HTML5 browser game, Hack Runner loads instantly and plays beautifully on any device — no downloads, no installs, and no accounts needed. Whether you're on a desktop at work or killing time on your phone, this fast-paced action game delivers quick, addictive sessions that keep you coming back for just one more run. How far can you survive in the neon data stream? Play Hack Runner online now and push your limits.</p>
+  <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
+  <ul class="text-gray-400 text-sm space-y-1 mb-4">
+    <li>• Switch lanes to dodge incoming obstacles</li>
+    <li>• Use arrow keys (desktop) or swipe/tap (mobile)</li>
+    <li>• Collect energy fragments for bonus points</li>
+    <li>• Speed increases over time — stay alert!</li>
+    <li>• One hit and it's game over — pure reflex gameplay</li>
+  </ul>
+  <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
+</section>

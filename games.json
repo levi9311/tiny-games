@@ -16,5 +16,41 @@
     "category": "Casual",
     "date": "2026-03-17",
     "plays": 89
+  },
+  {
+    "title": "Hack Runner",
+    "url": "/games/hack-runner/",
+    "thumb": "/games/hack-runner/thumb.svg",
+    "desc": "🏃 Sprint through the neon data stream! Dodge obstacles, collect energy, survive as long as you can.",
+    "category": "Action",
+    "date": "2026-03-17",
+    "plays": 156
+  },
+  {
+    "title": "Neon Harvester",
+    "url": "/games/neon-harvester/",
+    "thumb": "/games/neon-harvester/thumb.svg",
+    "desc": "🌐 Click to harvest data fragments in the cyber darknet! Build automated facilities, unlock achievements, and dominate the network.",
+    "category": "Idle",
+    "date": "2026-03-17",
+    "plays": 0
+  },
+  {
+    "title": "Neon 2048",
+    "url": "/games/neon-2048/",
+    "thumb": "/games/neon-2048/thumb.svg",
+    "desc": "🧮 Slide and merge tiles in the neon grid! Classic 2048 with cyberpunk vibes, multiple difficulty levels, and time attack mode.",
+    "category": "Casual",
+    "date": "2026-03-17",
+    "plays": 0
+  },
+  {
+    "title": "Neon Memory",
+    "url": "/games/neon-memory/",
+    "thumb": "/games/neon-memory/thumb.svg",
+    "desc": "🧠 Flip cards and find matching pairs! Test your memory with cyberpunk neon style. Multiple difficulty levels and time trial mode.",
+    "category": "Casual",
+    "date": "2026-03-17",
+    "plays": 0
   }
 ]

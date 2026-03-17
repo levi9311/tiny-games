@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Neon 2048 - Cyberpunk Number Puzzle | PlayPixelCraft</title>
+<meta name="description" content="Play Neon 2048 — a cyberpunk-themed number puzzle game. Slide, merge, and reach 2048 in this free HTML5 browser game. Multiple difficulty levels and time attack mode.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Neon 2048 - Cyberpunk Number Puzzle | PlayPixelCraft">
+<meta property="og:description" content="Slide and merge tiles in this neon-themed 2048 puzzle. Free browser game with multiple difficulty modes.">
+<meta property="og:image" content="https://playpixelcraft.com/games/neon-2048/thumb.svg">
+<meta property="og:url" content="https://playpixelcraft.com/games/neon-2048/">
+<link rel="canonical" href="https://playpixelcraft.com/games/neon-2048/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Neon 2048","description":"Cyberpunk-themed 2048 number puzzle game. Slide and merge tiles to reach 2048.","genre":"Puzzle","gamePlatform":"Web Browser","applicationCategory":"Game","operatingSystem":"Any","url":"https://playpixelcraft.com/games/neon-2048/","image":"https://playpixelcraft.com/games/neon-2048/thumb.svg","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"PlayPixelCraft","url":"https://playpixelcraft.com"}}
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background: #0a0a1a; overflow-x: hidden; touch-action: none; }
+  .neon-text { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
+  .neon-text-gold { color: #ffee00; text-shadow: 0 0 5px #ffee00, 0 0 10px #ffee00; }
+  .neon-text-red { color: #ff0040; text-shadow: 0 0 5px #ff0040, 0 0 10px #ff0040; }
+  .neon-border { border: 2px solid transparent; border-radius: 0.5rem; background: linear-gradient(#111122, #111122) padding-box, linear-gradient(90deg, #ff00ff, #00ffff, #ff0, #f0f) border-box; background-origin: border-box; background-clip: padding-box, border-box; }
+  .grid-cell { background: #1a1a2e; border: 1px solid #222244; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 100ms ease; user-select: none; }
+  .tile { position: absolute; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 6px; transition: top 100ms ease, left 100ms ease; z-index: 2; }
+  .tile-new { animation: tileAppear 200ms ease-out; }
+  .tile-merged { animation: tilePop 200ms ease-out; }
+  @keyframes tileAppear { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes tilePop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes float { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-40px); } }
+  .time-critical { animation: pulse 0.5s infinite; }
+  .float-text { position: absolute; animation: float 1s ease-out forwards; pointer-events: none; z-index: 50; font-weight: bold; font-size: 14px; }
+  .game-over-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 40; border-radius: 8px; }
+  .mode-btn { padding: 6px 14px; border: 1px solid #444; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; background: transparent; color: #888; }
+  .mode-btn.active { border-color: #0ff; color: #0ff; background: rgba(0,255,255,0.1); box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+  .mode-btn:hover:not(.active) { border-color: #666; color: #ccc; }
+  .confetti { position: fixed; pointer-events: none; z-index: 100; }
+  .scanline { background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.015) 2px, rgba(0,255,255,0.015) 4px); }
+  @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 100px; } }
+</style>
+</head>
+<body class="text-white min-h-screen flex flex-col items-center">
+
+<!-- Scanline overlay -->
+<div class="fixed inset-0 scanline pointer-events-none z-0" style="animation: scanMove 4s linear infinite;"></div>
+
+<!-- Notification -->
+<div id="notification" class="fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 border border-cyan-500 text-cyan-400 px-6 py-3 rounded-lg shadow-lg z-50 hidden text-sm font-bold" style="text-shadow:0 0 5px #0ff;"></div>
+
+<!-- Floating text container -->
+<div id="floatContainer" class="fixed inset-0 pointer-events-none z-50"></div>
+
+<div class="w-full max-w-lg mx-auto px-4 py-4 relative z-10 flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <div class="text-center mb-2">
+    <a href="/" class="text-cyan-400 hover:underline text-xs">← PlayPixelCraft</a>
+    <h1 class="text-3xl font-bold neon-text mt-1">NEON 2048</h1>
+  </div>
+
+  <!-- Mode selection -->
+  <div class="flex flex-col items-center gap-2 mb-3">
+    <div class="flex gap-2">
+      <button class="mode-btn active" data-diff="4" onclick="selectDifficulty(4)">Standard 4×4</button>
+      <button class="mode-btn" data-diff="5" onclick="selectDifficulty(5)">Challenge 5×5</button>
+      <button class="mode-btn" data-diff="6" onclick="selectDifficulty(6)">Expert 6×6</button>
+    </div>
+    <div class="flex gap-2">
+      <button class="mode-btn active" data-mode="classic" onclick="selectMode('classic')">🎮 Classic</button>
+      <button class="mode-btn" data-mode="timed" onclick="selectMode('timed')">⏱ Time Attack</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div class="flex justify-between items-center mb-3 px-1">
+    <div class="neon-border px-4 py-2 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Score</div>
+      <div id="scoreDisplay" class="text-xl font-bold neon-text font-mono">0</div>
+    </div>
+    <div id="timerBox" class="neon-border px-4 py-2 rounded-lg text-center bg-gray-900 hidden">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Time</div>
+      <div id="timerDisplay" class="text-xl font-bold neon-text font-mono">3:00</div>
+    </div>
+    <div class="neon-border px-4 py-2 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Best</div>
+      <div id="bestDisplay" class="text-xl font-bold neon-text-gold font-mono">0</div>
+    </div>
+    <div class="neon-border px-4 py-2 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Steps</div>
+      <div id="stepsDisplay" class="text-xl font-bold text-white font-mono">0</div>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="flex justify-center mb-3">
+    <div id="gridWrapper" class="relative neon-border bg-gray-950 p-2" style="border-radius:8px;">
+      <div id="gridBg"></div>
+      <div id="tileContainer" class="absolute inset-2"></div>
+      <div id="gameOverOverlay" class="game-over-overlay hidden">
+        <div class="text-center">
+          <div class="text-2xl font-bold neon-text-red mb-2">SYSTEM OFFLINE</div>
+          <div id="finalScore" class="text-gray-400 mb-3">Score: 0</div>
+          <button onclick="newGame()" class="px-6 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">REBOOT</button>
+        </div>
+      </div>
+      <div id="winOverlay" class="game-over-overlay hidden">
+        <div class="text-center">
+          <div class="text-2xl font-bold neon-text-gold mb-2">🎯 TARGET REACHED!</div>
+          <div id="winScore" class="text-gray-400 mb-3">Score: 0</div>
+          <div class="flex gap-3 justify-center">
+            <button onclick="continueGame()" class="px-4 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#00ffff,#00ff88);">CONTINUE</button>
+            <button onclick="newGame()" class="px-4 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">NEW GAME</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="flex gap-3 justify-center mb-3">
+    <button onclick="newGame()" class="px-5 py-2 rounded font-bold text-sm text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">NEW GAME</button>
+    <button onclick="undoMove()" id="undoBtn" class="px-5 py-2 rounded font-bold text-sm border border-gray-600 text-gray-400 hover:border-cyan-400 hover:text-cyan-400 transition disabled:opacity-30" disabled>↩ UNDO</button>
+  </div>
+
+  <!-- Hint -->
+  <div class="text-center text-gray-600 text-xs mb-4">↑↓←→ / WASD / Swipe to move</div>
+
+  <!-- Time Attack Leaderboard (collapsible) -->
+  <div id="leaderboard" class="hidden mb-4">
+    <button onclick="toggleLeaderboard()" class="text-cyan-400 text-sm hover:underline">🏆 Time Attack Leaderboard ▾</button>
+    <div id="lbContent" class="hidden mt-2 neon-border bg-gray-900 rounded-lg p-3">
+      <div class="flex gap-2 mb-2">
+        <button class="mode-btn active text-xs" data-lb="4" onclick="switchLB(4)">4×4</button>
+        <button class="mode-btn text-xs" data-lb="5" onclick="switchLB(5)">5×5</button>
+        <button class="mode-btn text-xs" data-lb="6" onclick="switchLB(6)">6×6</button>
+      </div>
+      <div id="lbList" class="text-sm text-gray-300"></div>
+    </div>
+  </div>
+
+  <!-- SEO Section -->
+  <section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800 mt-auto">
+    <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Neon 2048</h2>
+    <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon 2048 is a cyberpunk-themed take on the classic number puzzle that has captivated millions of players worldwide. Slide tiles across the grid, merge matching numbers, and work your way up to the legendary 2048 tile — all wrapped in stunning neon visuals and pulse-pounding electronic aesthetics. Choose between three difficulty levels: the classic 4×4 Standard grid, the expansive 5×5 Challenge mode, or the massive 6×6 Expert board for seasoned veterans. If classic mode isn't intense enough, switch to Time Attack and race against a 3-minute countdown where every successful merge buys you 5 extra seconds. Built as a free HTML5 browser game, Neon 2048 runs instantly on any device — desktop, tablet, or mobile phone — with zero downloads, no installs, and no sign-ups required. Whether you're a 2048 veteran or discovering the puzzle for the first time, the satisfying merge mechanic, strategic depth, and addictive gameplay loop will keep you coming back for just one more round. Play Neon 2048 online now and test your number-crunching skills in the neon grid.</p>
+    <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
+    <ul class="text-gray-400 text-sm space-y-1 mb-4">
+      <li>• Use arrow keys, WASD, or swipe to slide all tiles in one direction</li>
+      <li>• Tiles with the same number merge into one when they collide</li>
+      <li>• A new tile (2 or 4) appears after each move</li>
+      <li>• Reach the target number to win — 2048, 4096, or 8192 depending on difficulty</li>
+      <li>• In Time Attack mode, each merge adds +5 seconds to the countdown</li>
+      <li>• Game ends when no moves are possible (or time runs out in Time Attack)</li>
+    </ul>
+    <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
+  </section>
+</div>
+
+<script>
+// ==================== CONSTANTS ====================
+const DIFFICULTIES = {
+  4: { name: 'Standard', target: 2048, fourChance: 0.1 },
+  5: { name: 'Challenge', target: 4096, fourChance: 0.1 },
+  6: { name: 'Expert', target: 8192, fourChance: 0.2 }
+};
+
+const TILE_STYLES = {
+  2:    { bg: '#1a1a4a', color: '#00FFFF', border: '#00FFFF44', glow: '0 0 5px #00FFFF33' },
+  4:    { bg: '#1a2a1a', color: '#00FF88', border: '#00FF8844', glow: '0 0 5px #00FF8833' },
+  8:    { bg: '#2a1a3a', color: '#FF00FF', border: '#FF00FF44', glow: '0 0 5px #FF00FF33' },
+  16:   { bg: '#3a1a1a', color: '#FF0040', border: '#FF004044', glow: '0 0 8px #FF004033' },
+  32:   { bg: '#3a2a1a', color: '#FF8800', border: '#FF880044', glow: '0 0 8px #FF880033' },
+  64:   { bg: '#3a3a1a', color: '#FFEE00', border: '#FFEE0044', glow: '0 0 10px #FFEE0033' },
+  128:  { bg: '#3a3a0a', color: '#FFEE00', border: '#FFEE0088', glow: '0 0 15px #FFEE0066' },
+  256:  { bg: '#3a3a00', color: '#FFEE00', border: '#FFEE00aa', glow: '0 0 20px #FFEE0088' },
+  512:  { bg: '#444400', color: '#FFFFFF', border: '#FFEE00cc', glow: '0 0 25px #FFEE00aa' },
+  1024: { bg: '#555500', color: '#FFFFFF', border: '#FFEE00ee', glow: '0 0 30px #FFEE00cc, 0 0 60px #FFEE0044' },
+  2048: { bg: '#666600', color: '#FFFFFF', border: '#FFFFFF', glow: '0 0 30px #FFEE00, 0 0 60px #FF00FF, 0 0 90px #00FFFF' },
+};
+
+function getTileStyle(val) {
+  if (TILE_STYLES[val]) return TILE_STYLES[val];
+  if (val > 2048) return TILE_STYLES[2048];
+  // For values between known tiles, find closest lower
+  const keys = Object.keys(TILE_STYLES).map(Number).sort((a,b) => b-a);
+  for (const k of keys) { if (val >= k) return TILE_STYLES[k]; }
+  return TILE_STYLES[2];
+}
+
+// ==================== STATE ====================
+let gridSize = 4;
+let gameMode = 'classic';
+let grid = [];
+let score = 0;
+let steps = 0;
+let best = 0;
+let gameOver = false;
+let gameWon = false;
+let continueAfterWin = false;
+let previousState = null;
+let timerInterval = null;
+let timeLeft = 180;
+let lbViewSize = 4;
+
+function selectDifficulty(size) {
+  if (size === gridSize) return;
+  document.querySelectorAll('[data-diff]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.diff) === size));
+  gridSize = size;
+  newGame();
+}
+
+function selectMode(mode) {
+  if (mode === gameMode) return;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  gameMode = mode;
+  newGame();
+}
+
+// ==================== GRID ====================
+function createEmptyGrid() {
+  return Array.from({length: gridSize}, () => Array(gridSize).fill(0));
+}
+
+function cloneGrid(g) {
+  return g.map(row => [...row]);
+}
+
+function getEmptyCells(g) {
+  const cells = [];
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (g[r][c] === 0) cells.push({r, c});
+  return cells;
+}
+
+function addRandomTile(g) {
+  const empty = getEmptyCells(g);
+  if (empty.length === 0) return false;
+  const cell = empty[Math.floor(Math.random() * empty.length)];
+  const fourChance = DIFFICULTIES[gridSize].fourChance;
+  g[cell.r][cell.c] = Math.random() < fourChance ? 4 : 2;
+  return cell;
+}
+
+function canMove(g) {
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++) {
+      if (g[r][c] === 0) return true;
+      if (c < gridSize - 1 && g[r][c] === g[r][c+1]) return true;
+      if (r < gridSize - 1 && g[r][c] === g[r+1][c]) return true;
+    }
+  return false;
+}
+
+// ==================== MOVES ====================
+function slideRow(row) {
+  let arr = row.filter(v => v !== 0);
+  let merged = [];
+  let mergeScore = 0;
+  let mergeCount = 0;
+  let i = 0;
+  while (i < arr.length) {
+    if (i + 1 < arr.length && arr[i] === arr[i+1]) {
+      const val = arr[i] * 2;
+      merged.push(val);
+      mergeScore += val;
+      mergeCount++;
+      i += 2;
+    } else {
+      merged.push(arr[i]);
+      i++;
+    }
+  }
+  while (merged.length < gridSize) merged.push(0);
+  return { row: merged, score: mergeScore, merges: mergeCount };
+}
+
+function move(direction) {
+  if (gameOver) return false;
+  if (!continueAfterWin && gameWon) return false;
+
+  previousState = { grid: cloneGrid(grid), score, steps, timeLeft };
+
+  let moved = false;
+  let totalMergeScore = 0;
+  let totalMerges = 0;
+
+  const newGrid = createEmptyGrid();
+
+  for (let i = 0; i < gridSize; i++) {
+    let line;
+    if (direction === 'left') line = [...grid[i]];
+    else if (direction === 'right') line = [...grid[i]].reverse();
+    else if (direction === 'up') line = grid.map(row => row[i]);
+    else line = grid.map(row => row[i]).reverse();
+
+    const result = slideRow(line);
+    totalMergeScore += result.score;
+    totalMerges += result.merges;
+
+    if (direction === 'right') result.row.reverse();
+    if (direction === 'down') result.row.reverse();
+
+    for (let j = 0; j < gridSize; j++) {
+      if (direction === 'left' || direction === 'right') newGrid[i][j] = result.row[j];
+      else newGrid[j][i] = result.row[j];
+    }
+  }
+
+  // Check if anything changed
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (newGrid[r][c] !== grid[r][c]) moved = true;
+
+  if (!moved) { previousState = null; return false; }
+
+  grid = newGrid;
+  score += totalMergeScore;
+  steps++;
+
+  // Time Attack: add time for merges
+  if (gameMode === 'timed' && totalMerges > 0) {
+    const bonus = totalMerges * 5;
+    timeLeft += bonus;
+    showFloatText(`+${bonus}s`, '#00FF88');
+  }
+
+  // Add new tile
+  const newTile = addRandomTile(grid);
+
+  // Check win
+  const target = DIFFICULTIES[gridSize].target;
+  if (!continueAfterWin && !gameWon) {
+    for (let r = 0; r < gridSize; r++)
+      for (let c = 0; c < gridSize; c++)
+        if (grid[r][c] >= target) { gameWon = true; }
+  }
+
+  // Check lose
+  if (!canMove(grid)) {
+    gameOver = true;
+    onGameOver();
+  }
+
+  // Update best
+  const key = `neon2048_best_${gridSize}_${gameMode}`;
+  if (score > best) {
+    best = score;
+    localStorage.setItem(key, best);
+  }
+
+  document.getElementById('undoBtn').disabled = false;
+
+  renderGrid(newTile);
+  updateHUD();
+
+  if (gameWon && !continueAfterWin) {
+    setTimeout(() => showWin(), 300);
+  }
+
+  return true;
+}
+
+// ==================== RENDER ====================
+function getCellSize() {
+  const vw = Math.min(window.innerWidth - 40, 480);
+  const gap = 6;
+  const padding = 16;
+  const available = vw - padding;
+  return Math.floor((available - gap * (gridSize - 1)) / gridSize);
+}
+
+function renderGridBackground() {
+  const bg = document.getElementById('gridBg');
+  const cellSize = getCellSize();
+  const gap = 6;
+  const totalSize = cellSize * gridSize + gap * (gridSize - 1);
+
+  bg.style.display = 'grid';
+  bg.style.gridTemplateColumns = `repeat(${gridSize}, ${cellSize}px)`;
+  bg.style.gridTemplateRows = `repeat(${gridSize}, ${cellSize}px)`;
+  bg.style.gap = `${gap}px`;
+  bg.innerHTML = '';
+
+  for (let i = 0; i < gridSize * gridSize; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell';
+    cell.style.width = cellSize + 'px';
+    cell.style.height = cellSize + 'px';
+    cell.style.fontSize = (cellSize * 0.4) + 'px';
+    bg.appendChild(cell);
+  }
+
+  const wrapper = document.getElementById('gridWrapper');
+  wrapper.style.width = (totalSize + 16) + 'px';
+  wrapper.style.height = (totalSize + 16) + 'px';
+}
+
+function renderGrid(newTileCell) {
+  const container = document.getElementById('tileContainer');
+  const cellSize = getCellSize();
+  const gap = 6;
+
+  container.innerHTML = '';
+
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const val = grid[r][c];
+      if (val === 0) continue;
+
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      const style = getTileStyle(val);
+
+      tile.style.width = cellSize + 'px';
+      tile.style.height = cellSize + 'px';
+      tile.style.left = (c * (cellSize + gap)) + 'px';
+      tile.style.top = (r * (cellSize + gap)) + 'px';
+      tile.style.backgroundColor = style.bg;
+      tile.style.color = style.color;
+      tile.style.border = `1px solid ${style.border}`;
+      tile.style.boxShadow = style.glow;
+      tile.style.fontSize = val >= 1000 ? (cellSize * 0.25) + 'px' : (cellSize * 0.38) + 'px';
+      tile.style.fontFamily = 'monospace';
+      tile.textContent = val;
+
+      // Mark new tile
+      if (newTileCell && newTileCell.r === r && newTileCell.c === c) {
+        tile.classList.add('tile-new');
+      }
+
+      container.appendChild(tile);
+    }
+  }
+}
+
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = formatNumber(score);
+  document.getElementById('bestDisplay').textContent = formatNumber(best);
+  document.getElementById('stepsDisplay').textContent = steps;
+
+  if (gameMode === 'timed') {
+    const m = Math.floor(timeLeft / 60);
+    const s = Math.floor(timeLeft % 60);
+    const timerEl = document.getElementById('timerDisplay');
+    timerEl.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    if (timeLeft <= 30) {
+      timerEl.classList.add('time-critical');
+      timerEl.style.color = '#ff0040';
+      timerEl.style.textShadow = '0 0 5px #ff0040, 0 0 10px #ff0040';
+    } else {
+      timerEl.classList.remove('time-critical');
+      timerEl.style.color = '#0ff';
+      timerEl.style.textShadow = '0 0 5px #0ff, 0 0 10px #0ff';
+    }
+  }
+}
+
+// ==================== TIMER ====================
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  if (gameMode !== 'timed') return;
+  timeLeft = 180;
+  updateHUD();
+  timerInterval = setInterval(() => {
+    if (gameOver || gameWon) return;
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      gameOver = true;
+      onGameOver();
+    }
+    updateHUD();
+  }, 100);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ==================== GAME FLOW ====================
+function newGame() {
+  if (score > 0 && !gameOver) {
+    // Confirm only if game in progress
+    if (!confirm('Start a new game? Current progress will be lost.')) return;
+  }
+
+  stopTimer();
+  grid = createEmptyGrid();
+  score = 0;
+  steps = 0;
+  gameOver = false;
+  gameWon = false;
+  continueAfterWin = false;
+  previousState = null;
+
+  const key = `neon2048_best_${gridSize}_${gameMode}`;
+  best = parseInt(localStorage.getItem(key) || '0');
+
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  document.getElementById('winOverlay').classList.add('hidden');
+  document.getElementById('undoBtn').disabled = true;
+
+  // Timer UI
+  document.getElementById('timerBox').classList.toggle('hidden', gameMode !== 'timed');
+  document.getElementById('leaderboard').classList.toggle('hidden', gameMode !== 'timed');
+
+  renderGridBackground();
+
+  addRandomTile(grid);
+  const newTile = addRandomTile(grid);
+
+  if (gameMode === 'timed') startTimer();
+
+  renderGrid(newTile);
+  updateHUD();
+}
+
+function undoMove() {
+  if (!previousState) return;
+  grid = previousState.grid;
+  score = previousState.score;
+  steps = previousState.steps;
+  if (gameMode === 'timed') timeLeft = previousState.timeLeft;
+  previousState = null;
+  gameOver = false;
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  document.getElementById('undoBtn').disabled = true;
+  renderGrid();
+  updateHUD();
+}
+
+function continueGame() {
+  continueAfterWin = true;
+  gameWon = false;
+  document.getElementById('winOverlay').classList.add('hidden');
+  if (gameMode === 'timed') startTimer();
+}
+
+function onGameOver() {
+  stopTimer();
+  document.getElementById('gameOverOverlay').classList.remove('hidden');
+  document.getElementById('finalScore').textContent = `Score: ${formatNumber(score)} | Steps: ${steps}`;
+
+  // Save to leaderboard
+  if (gameMode === 'timed') {
+    saveToLeaderboard();
+  }
+}
+
+function showWin() {
+  stopTimer();
+  document.getElementById('winOverlay').classList.remove('hidden');
+  document.getElementById('winScore').textContent = `Score: ${formatNumber(score)} | Steps: ${steps}`;
+  showConfetti();
+  showNotification('🎯 Target reached!');
+}
+
+// ==================== LEADERBOARD ====================
+function getLBKey() { return `neon2048_lb_${lbViewSize}`; }
+
+function getLeaderboard() {
+  try { return JSON.parse(localStorage.getItem(getLBKey())) || []; }
+  catch { return []; }
+}
+
+function saveToLeaderboard() {
+  const lb = getLeaderboard();
+  lb.push({ score, steps, date: new Date().toLocaleDateString() });
+  lb.sort((a, b) => b.score - a.score);
+  localStorage.setItem(getLBKey(), JSON.stringify(lb.slice(0, 5)));
+}
+
+function switchLB(size) {
+  lbViewSize = size;
+  document.querySelectorAll('[data-lb]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.lb) === size));
+  renderLeaderboard();
+}
+
+function toggleLeaderboard() {
+  document.getElementById('lbContent').classList.toggle('hidden');
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const lb = getLeaderboard();
+  const el = document.getElementById('lbList');
+  if (lb.length === 0) {
+    el.innerHTML = '<p class="text-gray-500">No scores yet. Play a round!</p>';
+    return;
+  }
+  el.innerHTML = lb.map((e, i) => `
+    <div class="flex justify-between py-1 ${i < 3 ? 'text-cyan-400' : 'text-gray-400'}">
+      <span>${i+1}. ${formatNumber(e.score)} <span class="text-gray-600 text-xs">(${e.steps} steps)</span></span>
+      <span class="text-gray-600 text-xs">${e.date}</span>
+    </div>
+  `).join('');
+}
+
+// ==================== EFFECTS ====================
+function showFloatText(text, color) {
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = text;
+  el.style.color = color;
+  el.style.left = '50%';
+  el.style.top = '40%';
+  el.style.transform = 'translateX(-50%)';
+  document.getElementById('floatContainer').appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function showNotification(text) {
+  const el = document.getElementById('notification');
+  el.textContent = text;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+function showConfetti() {
+  const colors = ['#FF00FF', '#00FFFF', '#FFEE00', '#00FF88', '#FF0040'];
+  for (let i = 0; i < 30; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      width: ${6 + Math.random() * 8}px;
+      height: ${6 + Math.random() * 8}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+      opacity: ${0.7 + Math.random() * 0.3};
+    `;
+    document.body.appendChild(el);
+    const duration = 1500 + Math.random() * 2000;
+    const xDrift = (Math.random() - 0.5) * 200;
+    el.animate([
+      { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+      { transform: `translate(${xDrift}px, ${window.innerHeight + 50}px) rotate(${360 + Math.random()*720}deg)`, opacity: 0 }
+    ], { duration, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' });
+    setTimeout(() => el.remove(), duration);
+  }
+}
+
+// ==================== UTILS ====================
+function formatNumber(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toString();
+}
+
+// ==================== INPUT ====================
+function handleKey(e) {
+  const map = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    w: 'up', s: 'down', a: 'left', d: 'right',
+    W: 'up', S: 'down', A: 'left', D: 'right'
+  };
+  if (map[e.key]) {
+    e.preventDefault();
+    move(map[e.key]);
+  }
+}
+
+// Swipe detection
+let touchStartX = 0, touchStartY = 0;
+function handleTouchStart(e) {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}
+function handleTouchEnd(e) {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const minSwipe = 30;
+  if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    move(dx > 0 ? 'right' : 'left');
+  } else {
+    move(dy > 0 ? 'down' : 'up');
+  }
+}
+
+// ==================== INIT ====================
+window.addEventListener('keydown', handleKey);
+document.addEventListener('touchstart', handleTouchStart, { passive: true });
+document.addEventListener('touchend', handleTouchEnd, { passive: true });
+window.addEventListener('resize', () => { renderGridBackground(); renderGrid(); });
+
+newGame();
+</script>
+</body>
+</html>

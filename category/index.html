@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Categories - Free Browser Games | PlayPixelCraft</title>
+<meta name="description" content="Browse all game categories at PlayPixelCraft. Free HTML5 browser games including reaction, casual, action, and idle games. No downloads required.">
+<link rel="canonical" href="https://playpixelcraft.com/category/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Game Categories | PlayPixelCraft">
+<meta property="og:description" content="Browse free browser games by category — reaction, casual, action, idle, and more. No downloads required.">
+<meta property="og:url" content="https://playpixelcraft.com/category/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"CollectionPage","name":"Game Categories - PlayPixelCraft","url":"https://playpixelcraft.com/category/","description":"Browse all free browser game categories at PlayPixelCraft."}
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0a0a0a;overflow-x:hidden}
+.neon-text{color:#0ff;text-shadow:0 0 5px #0ff,0 0 10px #0ff,0 0 20px #0ff,0 0 40px #f0f}
+.neon-border{border:2px solid transparent;border-radius:.5rem;background:linear-gradient(#0a0a0a,#0a0a0a) padding-box,linear-gradient(90deg,#ff00ff,#00ffff,#ff0,#f0f) border-box;background-origin:border-box;background-clip:padding-box,border-box;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.neon-border::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(120deg,#ff00ff,#00ffff,#ff0,#f0f,#ff00ff);background-size:400% 400%;z-index:0;opacity:0;transition:opacity .3s;animation:glowBorder 5s linear infinite}
+.neon-border:hover::after{opacity:1}
+.neon-border>*{position:relative;z-index:1}
+@keyframes glowBorder{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+</style>
+</head>
+<body class="text-white min-h-screen">
+<div class="max-w-6xl mx-auto p-6">
+  <a href="/" class="text-cyan-400 hover:underline text-sm">← Back to PlayPixelCraft</a>
+  <h1 class="text-4xl font-bold neon-text text-center mt-4 mb-2">Game Categories</h1>
+  <p class="text-gray-400 text-center mb-8">Browse our free browser games by type. No downloads — just click and play.</p>
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <a href="/category/reaction-games/" class="flex flex-col items-center p-8 bg-gray-900 neon-border shadow-lg text-center no-underline text-white transition transform hover:-translate-y-1">
+      <span class="text-4xl mb-3">⚡</span>
+      <h2 class="text-xl font-bold neon-text">Reaction</h2>
+      <p class="text-gray-400 text-sm mt-2">Test your speed</p>
+    </a>
+    <a href="/category/casual-games/" class="flex flex-col items-center p-8 bg-gray-900 neon-border shadow-lg text-center no-underline text-white transition transform hover:-translate-y-1">
+      <span class="text-4xl mb-3">🔮</span>
+      <h2 class="text-xl font-bold neon-text">Casual</h2>
+      <p class="text-gray-400 text-sm mt-2">Relax and play</p>
+    </a>
+    <a href="/category/action-games/" class="flex flex-col items-center p-8 bg-gray-900 neon-border shadow-lg text-center no-underline text-white transition transform hover:-translate-y-1">
+      <span class="text-4xl mb-3">🏃</span>
+      <h2 class="text-xl font-bold neon-text">Action</h2>
+      <p class="text-gray-400 text-sm mt-2">Fast and intense</p>
+    </a>
+    <a href="/category/idle-games/" class="flex flex-col items-center p-8 bg-gray-900 neon-border shadow-lg text-center no-underline text-white transition transform hover:-translate-y-1">
+      <span class="text-4xl mb-3">🌐</span>
+      <h2 class="text-xl font-bold neon-text">Idle</h2>
+      <p class="text-gray-400 text-sm mt-2">Grow while you wait</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>

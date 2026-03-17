@@ -41,7 +41,7 @@
       "@type": "ItemList",
       "name": "PlayPixelCraft Game Collection",
       "description": "A curated collection of AI-generated browser games.",
-      "numberOfItems": 2,
+      "numberOfItems": 3,
       "itemListElement": [
         {
           "@type": "ListItem",
@@ -75,6 +75,24 @@
             "operatingSystem": "Any",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
             "image": "https://playpixelcraft.com/games/neon-merge/thumb.svg",
+            "playMode": ["SinglePlayer"],
+            "author": { "@type": "Organization", "name": "PlayPixelCraft" }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "VideoGame",
+            "name": "Hack Runner",
+            "url": "https://playpixelcraft.com/games/hack-runner/",
+            "description": "Sprint through the neon data stream! Dodge obstacles and collect energy in this endless runner.",
+            "genre": ["Endless Runner", "Action Game", "Casual Game"],
+            "gamePlatform": ["Web Browser", "HTML5"],
+            "applicationCategory": "Game",
+            "operatingSystem": "Any",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "image": "https://playpixelcraft.com/games/hack-runner/thumb.svg",
             "playMode": ["SinglePlayer"],
             "author": { "@type": "Organization", "name": "PlayPixelCraft" }
           }
@@ -457,6 +475,29 @@
             }
           });
         });
+    </script>
+
+    <!-- Latest Updates -->
+    <section class="max-w-6xl mx-auto px-4 pb-6 z-10 relative">
+      <h2 class="text-2xl font-bold neon-text mb-6 text-center">Latest Updates</h2>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="updates-grid"></div>
+    </section>
+
+    <script>
+      const updates = [
+        { date: "Mar 17, 2026", title: "Neon Harvester", desc: "Cyberpunk idle clicker — harvest data, build facilities, dominate the darknet!", url: "/games/neon-harvester/" },
+        { date: "Mar 17, 2026", title: "Hack Runner", desc: "Endless cyberpunk runner — sprint through neon data streams!", url: "/games/hack-runner/" },
+        { date: "Mar 17, 2026", title: "Neon Merge", desc: "Color evolution puzzle — merge matching neon orbs!", url: "/games/neon-merge/" },
+        { date: "Mar 17, 2026", title: "Neon Reflex", desc: "Reaction challenge — tap glowing targets before they fade!", url: "/games/neon-reflex/" }
+      ];
+      const ugrid = document.getElementById("updates-grid");
+      updates.forEach(u => {
+        const card = document.createElement("a");
+        card.href = u.url;
+        card.className = "flex flex-col bg-gray-900 neon-border shadow-lg p-4 transition transform hover:-translate-y-1 no-underline text-white";
+        card.innerHTML = '<div class="text-[10px] uppercase tracking-widest text-gray-500">' + u.date + '</div><h3 class="font-bold text-lg neon-text mt-1">' + u.title + '</h3><p class="text-gray-400 text-sm mt-2 flex-1">' + u.desc + '</p><span class="text-cyan-400 text-xs mt-3">Play Now →</span>';
+        ugrid.appendChild(card);
+      });
     </script>
   </body>
 </html>

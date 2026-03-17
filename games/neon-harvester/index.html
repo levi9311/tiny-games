@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Neon Harvester - Cyberpunk Idle Clicker Game | PlayPixelCraft</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <meta name="description" content="Neon Harvester - A cyberpunk idle clicker game by PlayPixelCraft. Click the neon core, build automated facilities, and harvest data fragments in 2077's darknet. Free, no download required.">
+    <meta name="keywords" content="idle game, clicker game, incremental game, cyberpunk game, neon game, browser game, HTML5 game, automation, PlayPixelCraft">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/games/neon-harvester/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Neon Harvester - Cyberpunk Idle Clicker Game">
+    <meta property="og:description" content="Build your data harvesting empire in 2077's darknet. Click the neon core, automate production, unlock achievements.">
+    <meta property="og:url" content="https://playpixelcraft.com/games/neon-harvester/">
+    <meta property="og:image" content="https://playpixelcraft.com/games/neon-harvester/thumb.svg">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Harvester - Cyberpunk Idle Clicker Game">
+    <meta name="twitter:description" content="Build your data harvesting empire in 2077's darknet. Click, automate, conquer.">
+    <meta name="twitter:image" content="https://playpixelcraft.com/games/neon-harvester/thumb.svg">
+
+    <!-- JSON-LD: VideoGame -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Neon Harvester",
+      "description": "A cyberpunk idle clicker game. Play as a data harvester in 2077's darknet, clicking the neon core and building automated facilities to collect data fragments.",
+      "url": "https://playpixelcraft.com/games/neon-harvester/",
+      "image": "https://playpixelcraft.com/games/neon-harvester/thumb.svg",
+      "genre": ["Idle Game", "Clicker Game", "Incremental Game"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "playMode": ["SinglePlayer"],
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "minValue": 1,
+        "maxValue": 1
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "datePublished": "2026-03-17",
+      "inLanguage": "en-US"
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#0A0A1A',
+                            core: '#00FFFF',
+                            energy: '#FF00FF',
+                            reward: '#FFEE00',
+                            facility: '#00FF88',
+                            rare: '#AA44FF',
+                            danger: '#FF0040'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0A0A1A;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Neon glow effects */
+        .neon-core { color: #00FFFF; text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF; }
+        .neon-energy { color: #FF00FF; text-shadow: 0 0 5px #FF00FF, 0 0 10px #FF00FF; }
+        .neon-reward { color: #FFEE00; text-shadow: 0 0 5px #FFEE00, 0 0 10px #FFEE00; }
+        .neon-facility { color: #00FF88; text-shadow: 0 0 5px #00FF88, 0 0 10px #00FF88; }
+        .neon-rare { color: #AA44FF; text-shadow: 0 0 5px #AA44FF, 0 0 10px #AA44FF; }
+
+        /* Glass morphism */
+        .glass {
+            background: rgba(17, 17, 24, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        /* Scan lines */
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.015) 2px,
+                rgba(0, 255, 255, 0.015) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Grid background */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Pulse animation */
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,255,255,0.4), 0 0 20px rgba(0,255,255,0.2); }
+            50% { box-shadow: 0 0 20px rgba(0,255,255,0.6), 0 0 40px rgba(0,255,255,0.4); }
+        }
+
+        .pulse-cyan { animation: neonPulse 2s ease-in-out infinite; }
+        .pulse-magenta { animation: neonPulse 2s ease-in-out infinite; box-shadow: 0 0 10px rgba(255,0,255,0.4); }
+
+        /* Number pop animation */
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .number-pop { animation: numberPop 0.2s ease-out; }
+
+        /* Achievement unlock flash */
+        @keyframes achievementFlash {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(255, 238, 0, 0.3); }
+        }
+        .achievement-flash { animation: achievementFlash 0.5s ease-out; }
+
+        /* Slide in animation */
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+
+        /* Floating text */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+        }
+        .float-text { animation: floatUp 1s ease-out forwards; }
+
+        /* Button disabled state */
+        .btn-disabled {
+            filter: grayscale(100%);
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Canvas container */
+        #coreCanvas {
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        #coreCanvas:hover { transform: scale(1.05); }
+        #coreCanvas:active { transform: scale(0.9); }
+
+        /* Progress bar */
+        .progress-bar {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #00FFFF, #00FF88);
+            transition: width 0.3s;
+        }
+
+        /* Lock icon */
+        .locked { position: relative; }
+        .locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        /* Responsive layout */
+        @media (min-width: 1024px) {
+            .game-layout {
+                display: grid;
+                grid-template-columns: 300px 1fr 300px;
+                gap: 20px;
+                height: calc(100vh - 100px);
+            }
+        }
+        @media (max-width: 1023px) {
+            .game-layout {
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        /* Data rain effect */
+        .data-rain {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .data-rain.active { opacity: 0.3; }
+
+        /* Tier milestone background changes */
+        .tier-k { background: linear-gradient(180deg, #0A0A1A 0%, #0A1A1A 100%); }
+        .tier-m { background: linear-gradient(180deg, #0A0A1A 0%, #1A0A1A 100%); }
+        .tier-b { background: linear-gradient(180deg, #0A0A1A 0%, #1A1A0A 100%); }
+    </style>
+</head>
+<body class="grid-bg scanlines">
+    <!-- Data rain canvas -->
+    <canvas id="rainCanvas" class="data-rain"></canvas>
+
+    <!-- Top HUD -->
+    <div class="glass fixed top-0 left-0 right-0 z-50 p-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-6">
+                <div>
+                    <div class="text-xs text-cyber-core opacity-70">DATA FRAGMENTS</div>
+                    <div id="totalDF" class="text-2xl neon-core font-bold">$0.00</div>
+                </div>
+                <div>
+                    <div class="text-xs text-cyber-facility opacity-70">PER SECOND</div>
+                    <div id="perSecond" class="text-xl neon-facility">0.0/s</div>
+                </div>
+                <div>
+                    <div class="text-xs text-cyber-energy opacity-70">PER CLICK</div>
+                    <div id="perClick" class="text-xl neon-energy">1</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-xs text-cyber-reward">
+                    <span id="comboCount">0</span>x COMBO
+                </div>
+                <button id="achievementsBtn" class="px-4 py-2 border border-cyber-reward text-cyber-reward rounded hover:bg-cyber-reward hover:text-black transition">
+                    🏆 Achievements
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main game area -->
+    <div class="game-layout pt-24 pb-4 px-4">
+        <!-- Facilities panel (left on desktop, bottom on mobile) -->
+        <div class="glass rounded-lg p-4 overflow-y-auto" style="max-height: calc(100vh - 140px);">
+            <h2 class="text-lg neon-facility mb-4 flex items-center gap-2">
+                <span>⚙️</span> FACILITIES
+            </h2>
+            <div id="facilitiesList" class="space-y-3">
+                <!-- Facilities will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Core canvas (center) -->
+        <div class="flex flex-col items-center justify-center relative">
+            <canvas id="coreCanvas" width="400" height="400" class="max-w-full"></canvas>
+            <div id="clickFeedback" class="absolute pointer-events-none"></div>
+        </div>
+
+        <!-- Achievements panel (right on desktop, hidden on mobile) -->
+        <div class="glass rounded-lg p-4 overflow-y-auto hidden lg:block" style="max-height: calc(100vh - 140px);">
+            <h2 class="text-lg neon-reward mb-4 flex items-center gap-2">
+                <span>🏆</span> ACHIEVEMENTS
+            </h2>
+            <div id="achievementsList" class="space-y-2">
+                <!-- Achievements will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile achievements modal -->
+    <div id="achievementsModal" class="fixed inset-0 bg-black bg-opacity-90 z-[60] hidden lg:hidden">
+        <div class="absolute top-20 left-4 right-4 bottom-4 glass rounded-lg p-4 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg neon-reward">🏆 ACHIEVEMENTS</h2>
+                <button id="closeAchievements" class="text-white text-2xl hover:text-cyber-reward">&times;</button>
+            </div>
+            <div id="mobileAchievementsList" class="space-y-2">
+                <!-- Achievements will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification toast -->
+    <div id="notification" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 glass px-6 py-3 rounded-lg neon-facility hidden z-[70]">
+    </div>
+
+    <script>
+        // ==================== GAME CONFIG ====================
+        const FACILITIES = [
+            { id: 'probe', name: 'Data Probe', baseCost: 15, baseProduction: 0.1, color: '#00FFFF', icon: '📡' },
+            { id: 'crawler', name: 'Scan Crawler', baseCost: 100, baseProduction: 0.5, color: '#00FF88', icon: '🕷️' },
+            { id: 'decryptor', name: 'Quantum Decryptor', baseCost: 1100, baseProduction: 4, color: '#FF00FF', icon: '🔓' },
+            { id: 'node', name: 'Darknet Node', baseCost: 12000, baseProduction: 10, color: '#FFEE00', icon: '🌐' },
+            { id: 'neural', name: 'Neural Network', baseCost: 130000, baseProduction: 40, color: '#AA44FF', icon: '🧠' }
+        ];
+
+        const ACHIEVEMENTS = [
+            { id: 'firstClick', name: 'First Connection', desc: 'Click the core for the first time', condition: s => s.totalClicks >= 1 },
+            { id: 'firstFacility', name: 'Automation Start', desc: 'Purchase your first facility', condition: s => s.totalFacilities >= 1 },
+            { id: 'total10K', name: 'Data Influx', desc: 'Accumulate 10K $DF', condition: s => s.lifetimeDF >= 10000 },
+            { id: 'total1M', name: 'Quantum Breakthrough', desc: 'Accumulate 1M $DF', condition: s => s.lifetimeDF >= 1000000 },
+            { id: 'total1B', name: 'Darknet Dominator', desc: 'Accumulate 1B $DF', condition: s => s.lifetimeDF >= 1000000000 },
+            { id: 'clicks1K', name: 'Click Maniac', desc: 'Click 1,000 times', condition: s => s.totalClicks >= 1000 },
+            { id: 'allFacilities10', name: 'Full Automation', desc: 'Own 10 of each facility', condition: s => FACILITIES.every(f => (s.facilities[f.id] || 0) >= 10) },
+            { id: 'perSecond1K', name: 'Speed Harvester', desc: 'Produce over 1,000 $DF/s', condition: s => calculatePerSecond(s) >= 1000 },
+            { id: 'combo50', name: 'Combo Master', desc: 'Achieve a 50+ combo', condition: s => s.maxCombo >= 50 },
+            { id: 'total100B', name: 'Data Empire', desc: 'Accumulate 100B $DF', condition: s => s.lifetimeDF >= 100000000000 },
+            { id: 'clicks10K', name: 'Machine Heart', desc: 'Click 10,000 times', condition: s => s.totalClicks >= 10000 },
+            { id: 'perSecond1M', name: 'Godlike Harvest', desc: 'Produce over 1M $DF/s', condition: s => calculatePerSecond(s) >= 1000000 }
+        ];
+
+        // ==================== GAME STATE ====================
+        let state = {
+            df: 0,
+            lifetimeDF: 0,
+            totalClicks: 0,
+            combo: 0,
+            maxCombo: 0,
+            lastClickTime: 0,
+            facilities: {},
+            unlockedAchievements: [],
+            lastSaveTime: Date.now()
+        };
+
+        // Initialize facilities
+        FACILITIES.forEach(f => state.facilities[f.id] = 0);
+
+        // Canvas and animation
+        const canvas = document.getElementById('coreCanvas');
+        const ctx = canvas.getContext('2d');
+        const rainCanvas = document.getElementById('rainCanvas');
+        const rainCtx = rainCanvas.getContext('2d');
+
+        // Animation state
+        let animationTime = 0;
+        let ripples = [];
+        let particles = [];
+        let floatingTexts = [];
+        let dataDrops = [];
+        let coreScale = 1;
+        let coreGlowIntensity = 1;
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function formatNumber(num) {
+            if (num >= 1e11) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e8) return (num / 1e6).toFixed(1) + 'M';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            if (num >= 1e5) return (num / 1e3).toFixed(1) + 'K';
+            if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+            return num.toFixed(2);
+        }
+
+        function getFacilityCost(id) {
+            const facility = FACILITIES.find(f => f.id === id);
+            const count = state.facilities[id] || 0;
+            return facility.baseCost * Math.pow(1.15, count);
+        }
+
+        function calculatePerSecond() {
+            return FACILITIES.reduce((total, f) => {
+                return total + (state.facilities[f.id] || 0) * f.baseProduction;
+            }, 0);
+        }
+
+        function getClickValue() {
+            return 1 + Math.floor(calculatePerSecond() * 0.1);
+        }
+
+        function saveGame() {
+            state.lastSaveTime = Date.now();
+            localStorage.setItem('neonHarvesterSave', JSON.stringify(state));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('neonHarvesterSave');
+            if (saved) {
+                const loaded = JSON.parse(saved);
+                state = { ...state, ...loaded };
+                // Calculate offline earnings
+                const offlineTime = (Date.now() - state.lastSaveTime) / 1000;
+                if (offlineTime > 10) {
+                    const perSecond = calculatePerSecond();
+                    const offlineEarnings = offlineTime * perSecond * 0.5; // 50% efficiency
+                    if (offlineEarnings > 0) {
+                        state.df += offlineEarnings;
+                        state.lifetimeDF += offlineEarnings;
+                        showNotification(`Offline earnings: +${formatNumber(offlineEarnings)} $DF`);
+                    }
+                }
+            }
+        }
+
+        function showNotification(text) {
+            const notif = document.getElementById('notification');
+            notif.textContent = text;
+            notif.classList.remove('hidden');
+            setTimeout(() => notif.classList.add('hidden'), 3000);
+        }
+
+        // ==================== ACHIEVEMENTS ====================
+        function checkAchievements() {
+            let newUnlock = false;
+            ACHIEVEMENTS.forEach(ach => {
+                if (!state.unlockedAchievements.includes(ach.id) && ach.condition(state)) {
+                    state.unlockedAchievements.push(ach.id);
+                    showNotification(`🏆 Achievement: ${ach.name}`);
+                    document.body.classList.add('achievement-flash');
+                    setTimeout(() => document.body.classList.remove('achievement-flash'), 500);
+                    newUnlock = true;
+                }
+            });
+            if (newUnlock) renderAchievements();
+        }
+
+        function renderAchievements() {
+            const desktopList = document.getElementById('achievementsList');
+            const mobileList = document.getElementById('mobileAchievementsList');
+            
+            const html = ACHIEVEMENTS.map(ach => {
+                const unlocked = state.unlockedAchievements.includes(ach.id);
+                return `
+                    <div class="p-3 rounded border ${unlocked ? 'border-cyber-reward bg-cyber-reward bg-opacity-10' : 'border-gray-700 opacity-50'}">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">${unlocked ? '🏆' : '🔒'}</span>
+                            <div>
+                                <div class="font-bold ${unlocked ? 'neon-reward' : 'text-gray-500'}">${ach.name}</div>
+                                <div class="text-xs text-gray-400">${ach.desc}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            desktopList.innerHTML = html;
+            mobileList.innerHTML = html;
+        }
+
+        // ==================== CANVAS RENDERING ====================
+        function resizeRainCanvas() {
+            rainCanvas.width = window.innerWidth;
+            rainCanvas.height = window.innerHeight;
+        }
+
+        function drawCore() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseRadius = 120 * coreScale;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Determine core color based on combo
+            let coreColor = state.combo >= 50 ? '#FFEE00' : state.combo >= 10 ? '#FFEE00' : '#00FFFF';
+            let outerColor = state.combo >= 50 ? '#FF00FF' : '#0066AA';
+
+            // Draw energy rings (rotating dashed arcs)
+            const perSecond = calculatePerSecond();
+            const rotationSpeed = Math.min(perSecond * 0.001, 0.1);
+            animationTime += rotationSpeed;
+
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, baseRadius + 30 + i * 20, animationTime + i * Math.PI / 3, animationTime + i * Math.PI / 3 + Math.PI);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 - i * 0.08})`;
+                ctx.lineWidth = 3;
+                ctx.setLineDash([20, 15]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw outer glow
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius * 1.5);
+            gradient.addColorStop(0, `${coreColor}40`);
+            gradient.addColorStop(0.5, `${coreColor}20`);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw core with radial gradient
+            const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, baseRadius);
+            coreGradient.addColorStop(0, '#FFFFFF');
+            coreGradient.addColorStop(0.3, coreColor);
+            coreGradient.addColorStop(0.7, outerColor);
+            coreGradient.addColorStop(1, '#000033');
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+
+            // Add glow effect
+            ctx.shadowColor = coreColor;
+            ctx.shadowBlur = 30 * coreGlowIntensity;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, baseRadius * 0.9, 0, Math.PI * 2);
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw orbiting electrons
+            for (let i = 0; i < 4; i++) {
+                const angle = animationTime * (1 + i * 0.3) + (i * Math.PI / 2);
+                const orbitX = centerX + Math.cos(angle) * (baseRadius + 50);
+                const orbitY = centerY + Math.sin(angle) * 30;
+                
+                ctx.beginPath();
+                ctx.arc(orbitX, orbitY, 8, 0, Math.PI * 2);
+                ctx.fillStyle = i % 2 === 0 ? '#00FFFF' : '#FF00FF';
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw ripples
+            ripples.forEach((ripple, index) => {
+                const progress = (Date.now() - ripple.time) / 1000;
+                if (progress > 1) {
+                    ripples.splice(index, 1);
+                    return;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, baseRadius + progress * 100, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 255, 255, ${0.5 * (1 - progress)})`;
+                ctx.lineWidth = 3 * (1 - progress);
+                ctx.stroke();
+            });
+
+            // Draw particles
+            particles.forEach((particle, index) => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.3; // gravity
+                particle.life -= 0.02;
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                    return;
+                }
+
+                ctx.save();
+                ctx.translate(particle.x, particle.y);
+                ctx.rotate(particle.rotation);
+                
+                // Draw diamond shape
+                ctx.beginPath();
+                ctx.moveTo(0, -8 * particle.life);
+                ctx.lineTo(6 * particle.life, 0);
+                ctx.lineTo(0, 8 * particle.life);
+                ctx.lineTo(-6 * particle.life, 0);
+                ctx.closePath();
+                
+                ctx.fillStyle = particle.color;
+                ctx.globalAlpha = particle.life;
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw floating texts
+            floatingTexts.forEach((text, index) => {
+                text.y -= 2;
+                text.life -= 0.015;
+                
+                if (text.life <= 0) {
+                    floatingTexts.splice(index, 1);
+                    return;
+                }
+
+                ctx.fillStyle = `rgba(0, 255, 255, ${text.life})`;
+                ctx.font = 'bold 24px Courier New';
+                ctx.fillText(text.text, text.x, text.y);
+            });
+
+            // Reset scale after click
+            coreScale = 1 - (1 - coreScale) * 0.9;
+            coreGlowIntensity = 1 - (1 - coreGlowIntensity) * 0.95;
+        }
+
+        function drawDataRain() {
+            if (state.combo < 50) {
+                rainCtx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+                return;
+            }
+
+            // Add new drops
+            if (Math.random() < 0.3) {
+                dataDrops.push({
+                    x: Math.random() * rainCanvas.width,
+                    y: -20,
+                    speed: 5 + Math.random() * 10,
+                    chars: String.fromCharCode(0x30A0 + Math.random() * 96)
+                });
+            }
+
+            rainCtx.fillStyle = 'rgba(10, 10, 26, 0.1)';
+            rainCtx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
+
+            rainCtx.fillStyle = '#00FFFF';
+            rainCtx.font = '14px monospace';
+            
+            dataDrops.forEach((drop, index) => {
+                drop.y += drop.speed;
+                rainCtx.fillText(drop.chars, drop.x, drop.y);
+                
+                if (drop.y > rainCanvas.height) {
+                    dataDrops.splice(index, 1);
+                }
+            });
+        }
+
+        // ==================== GAME LOOP ====================
+        function gameLoop() {
+            drawCore();
+            drawDataRain();
+            updateUI();
+            checkAchievements();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateUI() {
+            // Update numbers with pop animation
+            const totalEl = document.getElementById('totalDF');
+            const perSecEl = document.getElementById('perSecond');
+            const perClickEl = document.getElementById('perClick');
+            const comboEl = document.getElementById('comboCount');
+
+            totalEl.textContent = '$' + formatNumber(state.df);
+            perSecEl.textContent = formatNumber(calculatePerSecond()) + '/s';
+            perClickEl.textContent = formatNumber(getClickValue());
+            comboEl.textContent = state.combo;
+
+            // Add pop effect when values change
+            [totalEl, perSecEl, perClickEl].forEach(el => {
+                el.classList.remove('number-pop');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('number-pop');
+            });
+
+            // Update facility buttons
+            FACILITIES.forEach(f => {
+                const btn = document.getElementById(`buy-${f.id}`);
+                if (btn) {
+                    const cost = getFacilityCost(f.id);
+                    const canAfford = state.df >= cost;
+                    btn.disabled = !canAfford;
+                    btn.classList.toggle('btn-disabled', !canAfford);
+                    btn.classList.toggle('pulse-cyan', canAfford);
+                }
+            });
+
+            // Check tier milestones for background
+            document.body.classList.remove('tier-k', 'tier-m', 'tier-b');
+            if (state.lifetimeDF >= 1e9) document.body.classList.add('tier-b');
+            else if (state.lifetimeDF >= 1e6) document.body.classList.add('tier-m');
+            else if (state.lifetimeDF >= 1e3) document.body.classList.add('tier-k');
+        }
+
+        function renderFacilities() {
+            const list = document.getElementById('facilitiesList');
+            list.innerHTML = FACILITIES.map(f => {
+                const count = state.facilities[f.id] || 0;
+                const cost = getFacilityCost(f.id);
+                const production = f.baseProduction;
+                
+                return `
+                    <div class="p-3 rounded border border-opacity-30" style="border-color: ${f.color}">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">${f.icon}</span>
+                                <div>
+                                    <div class="font-bold" style="color: ${f.color}">${f.name}</div>
+                                    <div class="text-xs opacity-70">Level ${count} • +${production}/s each</div>
+                                </div>
+                            </div>
+                            <button id="buy-${f.id}" 
+                                    class="px-4 py-2 rounded border font-bold transition-all"
+                                    style="border-color: ${f.color}; color: ${f.color}"
+                                    onclick="buyFacility('${f.id}')">
+                                $${formatNumber(cost)}
+                            </button>
+                        </div>
+                        <div class="progress-bar h-1">
+                            <div class="progress-fill h-full" style="width: ${(count % 10) * 10}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== INTERACTIONS ====================
+        function handleClick(e) {
+            const now = Date.now();
+            const comboResetTime = 2000; // 2 seconds to maintain combo
+            
+            // Combo logic
+            if (now - state.lastClickTime < comboResetTime) {
+                state.combo++;
+                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+            } else {
+                state.combo = 1;
+            }
+            state.lastClickTime = now;
+
+            // Add resources
+            const clickValue = getClickValue();
+            state.df += clickValue;
+            state.lifetimeDF += clickValue;
+            state.totalClicks++;
+
+            // Visual effects
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches?.[0]?.clientX || rect.left + rect.width / 2) - rect.left;
+            const y = (e.clientY || e.touches?.[0]?.clientY || rect.top + rect.height / 2) - rect.top;
+
+            // Add ripple
+            ripples.push({ time: Date.now() });
+
+            // Add particles
+            const particleCount = 8 + Math.floor(Math.random() * 8);
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 / particleCount) * i + Math.random() * 0.5;
+                const speed = 3 + Math.random() * 5;
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1,
+                    color: ['#00FFFF', '#FF00FF', '#FFEE00'][Math.floor(Math.random() * 3)],
+                    rotation: Math.random() * Math.PI
+                });
+            }
+
+            // Add floating text
+            floatingTexts.push({
+                x: x,
+                y: y,
+                text: `+${formatNumber(clickValue)} $DF`,
+                life: 1
+            });
+
+            // Core animation
+            coreScale = 0.9;
+            coreGlowIntensity = 2;
+        }
+
+        function buyFacility(id) {
+            const cost = getFacilityCost(id);
+            if (state.df >= cost) {
+                state.df -= cost;
+                state.facilities[id] = (state.facilities[id] || 0) + 1;
+                state.totalFacilities = (state.totalFacilities || 0) + 1;
+                renderFacilities();
+                showNotification(`Purchased ${FACILITIES.find(f => f.id === id).name}!`);
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            loadGame();
+            renderFacilities();
+            renderAchievements();
+            resizeRainCanvas();
+            
+            // Event listeners
+            canvas.addEventListener('click', handleClick);
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleClick(e);
+            });
+
+            document.getElementById('achievementsBtn').addEventListener('click', () => {
+                document.getElementById('achievementsModal').classList.remove('hidden');
+            });
+
+            document.getElementById('closeAchievements').addEventListener('click', () => {
+                document.getElementById('achievementsModal').classList.add('hidden');
+            });
+
+            window.addEventListener('resize', resizeRainCanvas);
+
+            // Auto-save every 30 seconds
+            setInterval(saveGame, 30000);
+
+            // Start game loop
+            gameLoop();
+        }
+
+        // Start the game
+        init();
+    </script>
+
+<section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800">
+  <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Neon Harvester</h2>
+  <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon Harvester is an idle clicker and incremental game that puts you in control of a sprawling data harvesting network in a cyberpunk darknet. Start by manually clicking the glowing neon core to extract data fragments ($DF), then spend your earnings on automated facilities — data probes, scan crawlers, quantum decryptors, darknet nodes, and neural networks — each one generating passive income around the clock. As your empire grows, watch your $DF counter climb from thousands to millions to billions, with satisfying milestone celebrations at every breakthrough. The game saves your progress automatically and even calculates offline earnings, so your network keeps producing while you're away. With its mesmerizing neon visuals, combo system, achievement challenges, and deeply addictive progression loop, Neon Harvester is the perfect free browser game for multitaskers and number-crunching fans alike. Built as a pure HTML5 game with zero downloads required, it runs smoothly on any device — desktop, tablet, or mobile phone. Start your data empire today and see how far the rabbit hole goes in this free online idle game.</p>
+  <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
+  <ul class="text-gray-400 text-sm space-y-1 mb-4">
+    <li>• Click the neon core to harvest data fragments ($DF)</li>
+    <li>• Buy automated facilities for passive income</li>
+    <li>• Upgrade and expand your data harvesting network</li>
+    <li>• Unlock 12 achievements as you progress</li>
+    <li>• Progress saves automatically — even earns while you're offline</li>
+  </ul>
+  <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
+</section>
+  </body>
+</html>

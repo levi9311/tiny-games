@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Neon Memory - Cyberpunk Card Match Game | PlayPixelCraft</title>
+<meta name="description" content="Play Neon Memory — a cyberpunk-themed card matching game. Flip cards, find pairs, and test your memory in this free HTML5 browser game with multiple difficulty levels.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Neon Memory - Cyberpunk Card Match Game | PlayPixelCraft">
+<meta property="og:description" content="Flip cards and match pairs in this neon-themed memory game. Free browser game with multiple difficulty levels.">
+<meta property="og:image" content="https://playpixelcraft.com/games/neon-memory/thumb.svg">
+<meta property="og:url" content="https://playpixelcraft.com/games/neon-memory/">
+<link rel="canonical" href="https://playpixelcraft.com/games/neon-memory/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Neon Memory","description":"Cyberpunk-themed card matching memory game. Flip cards and find pairs.","genre":"Card Game","gamePlatform":"Web Browser","applicationCategory":"Game","operatingSystem":"Any","url":"https://playpixelcraft.com/games/neon-memory/","image":"https://playpixelcraft.com/games/neon-memory/thumb.svg","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"PlayPixelCraft","url":"https://playpixelcraft.com"}}
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { background: #0a0a1a; overflow-x: hidden; }
+.neon-text { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
+.neon-text-gold { color: #ffee00; text-shadow: 0 0 5px #ffee00, 0 0 10px #ffee00; }
+.neon-border { border: 2px solid transparent; border-radius: 0.5rem; background: linear-gradient(#111122, #111122) padding-box, linear-gradient(90deg, #ff00ff, #00ffff, #ff0, #f0f) border-box; background-origin: border-box; background-clip: padding-box, border-box; }
+
+/* Card 3D flip */
+.card-container { perspective: 600px; cursor: pointer; }
+.card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s ease; transform-style: preserve-3d; }
+.card-container.flipped .card-inner { transform: rotateY(180deg); }
+.card-front, .card-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.card-front { transform: rotateY(180deg); }
+.card-back { background: #1a1a3e; border: 2px solid #333366; }
+.card-back-pattern { width: 100%; height: 100%; border-radius: 6px; background: linear-gradient(135deg, #1a1a3e 25%, #222255 25%, #222255 50%, #1a1a3e 50%, #1a1a3e 75%, #222255 75%); background-size: 20px 20px; display: flex; align-items: center; justify-content: center; }
+.card-back-text { color: #444488; font-family: monospace; font-size: 12px; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+
+/* Matched state */
+.card-container.matched .card-front { box-shadow: 0 0 15px var(--match-color, #0ff), 0 0 30px var(--match-color, #0ff33); border: 2px solid var(--match-color, #0ff); }
+.card-container.matched { pointer-events: none; }
+.card-container.matched .card-inner { animation: matchPulse 0.4s ease-out; }
+
+/* Mismatch shake */
+.card-container.mismatch { animation: cardShake 0.4s ease-out; }
+@keyframes cardShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+@keyframes matchPulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+
+/* New card appear */
+.card-container.card-new { animation: cardAppear 0.3s ease-out; }
+@keyframes cardAppear { from { transform: scale(0) rotateY(90deg); opacity: 0; } to { transform: scale(1) rotateY(0deg); opacity: 1; } }
+
+/* Scanline */
+.scanline { background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.01) 2px, rgba(0,255,255,0.01) 4px); }
+
+/* Mode buttons */
+.mode-btn { padding: 6px 14px; border: 1px solid #444; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; background: transparent; color: #888; }
+.mode-btn.active { border-color: #0ff; color: #0ff; background: rgba(0,255,255,0.1); box-shadow: 0 0 10px rgba(0,255,255,0.2); }
+.mode-btn:hover:not(.active) { border-color: #666; color: #ccc; }
+
+/* Timer critical */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.time-critical { animation: pulse 0.5s infinite; }
+
+/* Win confetti */
+.confetti { position: fixed; pointer-events: none; z-index: 100; }
+
+/* Game over overlay */
+.game-over-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 60; }
+</style>
+</head>
+<body class="text-white min-h-screen flex flex-col items-center">
+<div class="fixed inset-0 scanline pointer-events-none z-0"></div>
+
+<!-- Notification -->
+<div id="notification" class="fixed top-4 left-1/2 -translate-x-1/2 bg-gray-900 border border-cyan-500 text-cyan-400 px-6 py-3 rounded-lg shadow-lg z-50 hidden text-sm font-bold" style="text-shadow:0 0 5px #0ff;"></div>
+
+<!-- Win overlay -->
+<div id="winOverlay" class="game-over-overlay hidden">
+  <div class="text-center neon-border bg-gray-900 p-8 rounded-xl">
+    <div class="text-3xl mb-2">🧠</div>
+    <div class="text-2xl font-bold neon-text-gold mb-2">MEMORY CLEAR!</div>
+    <div id="winStats" class="text-gray-400 mb-4 text-sm"></div>
+    <div id="winStars" class="text-3xl mb-4"></div>
+    <div class="flex gap-3 justify-center">
+      <button onclick="newGame()" class="px-6 py-2 rounded-lg font-bold text-black text-sm" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fail overlay -->
+<div id="failOverlay" class="game-over-overlay hidden">
+  <div class="text-center neon-border bg-gray-900 p-8 rounded-xl">
+    <div class="text-3xl mb-2">💀</div>
+    <div class="text-2xl font-bold mb-2" style="color:#ff0040;text-shadow:0 0 10px #ff0040;">TIME OUT</div>
+    <div id="failStats" class="text-gray-400 mb-4 text-sm"></div>
+    <button onclick="newGame()" class="px-6 py-2 rounded-lg font-bold text-black text-sm" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">TRY AGAIN</button>
+  </div>
+</div>
+
+<div class="w-full max-w-lg mx-auto px-4 py-4 relative z-10 flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <div class="text-center mb-3">
+    <a href="/" class="text-cyan-400 hover:underline text-xs">← PlayPixelCraft</a>
+    <h1 class="text-3xl font-bold neon-text mt-1">NEON MEMORY</h1>
+    <p class="text-gray-500 text-xs mt-1">Find all matching pairs</p>
+  </div>
+
+  <!-- Difficulty -->
+  <div class="flex justify-center gap-2 mb-3">
+    <button class="mode-btn active" data-diff="easy" onclick="selectDifficulty('easy')">Easy 4×3</button>
+    <button class="mode-btn" data-diff="normal" onclick="selectDifficulty('normal')">Normal 4×4</button>
+    <button class="mode-btn" data-diff="hard" onclick="selectDifficulty('hard')">Hard 5×4</button>
+    <button class="mode-btn" data-diff="expert" onclick="selectDifficulty('expert')">Expert 6×5</button>
+  </div>
+
+  <!-- Mode toggle -->
+  <div class="flex justify-center gap-2 mb-3">
+    <button class="mode-btn active" data-mode="free" onclick="selectMode('free')">🎮 Free Play</button>
+    <button class="mode-btn" data-mode="timed" onclick="selectMode('timed')">⏱ Time Trial</button>
+  </div>
+
+  <!-- HUD -->
+  <div class="flex justify-between items-center mb-3 px-1">
+    <div class="neon-border px-3 py-1.5 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Steps</div>
+      <div id="stepsDisplay" class="text-lg font-bold text-white font-mono">0</div>
+    </div>
+    <div class="neon-border px-3 py-1.5 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Pairs</div>
+      <div id="pairsDisplay" class="text-lg font-bold neon-text font-mono">0/0</div>
+    </div>
+    <div id="timerBox" class="neon-border px-3 py-1.5 rounded-lg text-center bg-gray-900 hidden">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Time</div>
+      <div id="timerDisplay" class="text-lg font-bold neon-text font-mono">0:00</div>
+    </div>
+    <div id="timeBox" class="neon-border px-3 py-1.5 rounded-lg text-center bg-gray-900">
+      <div class="text-[10px] uppercase tracking-widest text-gray-500">Time</div>
+      <div id="timeDisplay" class="text-lg font-bold text-white font-mono">0:00</div>
+    </div>
+  </div>
+
+  <!-- Card Grid -->
+  <div class="flex justify-center mb-3">
+    <div id="cardGrid" class="grid gap-2"></div>
+  </div>
+
+  <!-- Button -->
+  <div class="flex justify-center mb-4">
+    <button onclick="newGame()" class="px-5 py-2 rounded-lg font-bold text-sm text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">NEW GAME</button>
+  </div>
+
+  <!-- Best scores -->
+  <div class="text-center mb-4">
+    <button onclick="toggleBest()" class="text-cyan-400 text-xs hover:underline">🏆 Best Scores ▾</button>
+    <div id="bestContent" class="hidden mt-2 neon-border bg-gray-900 rounded-lg p-3 text-left text-sm text-gray-400"></div>
+  </div>
+
+  <!-- SEO -->
+  <section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800 mt-auto">
+    <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Neon Memory</h2>
+    <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon Memory is a cyberpunk-themed card matching game that challenges your short-term memory and pattern recognition skills. A grid of face-down cards hides pairs of matching symbols — flip two at a time and find all the pairs to clear the board. With four difficulty levels ranging from a gentle 4×3 Easy grid to a brain-burning 6×5 Expert board, there's a challenge for every skill level. In Free Play mode, take your time and try to complete the board in as few steps as possible. In Time Trial mode, race against the clock to match all pairs before time runs out. Built as a free HTML5 browser game, Neon Memory runs instantly on any device — desktop, tablet, or mobile phone — with zero downloads, no installs, and no sign-ups required. The satisfying 3D card flip animations, neon glow effects, and star rating system make every successful match feel rewarding. Play Neon Memory online now and give your brain a neon-lit workout.</p>
+    <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
+    <ul class="text-gray-400 text-sm space-y-1 mb-4">
+      <li>• Click or tap a card to flip it over and reveal the symbol</li>
+      <li>• Flip a second card — if both symbols match, they stay revealed</li>
+      <li>• If they don't match, both cards flip back face-down</li>
+      <li>• Find all matching pairs to clear the board and win</li>
+      <li>• Try to finish in fewer steps for a higher star rating</li>
+      <li>• In Time Trial, beat the clock before time runs out!</li>
+    </ul>
+    <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
+  </section>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const DIFFICULTIES = {
+  easy:   { cols: 4, rows: 3, pairs: 6,  timed: 60  },
+  normal: { cols: 4, rows: 4, pairs: 8,  timed: 90  },
+  hard:   { cols: 5, rows: 4, pairs: 10, timed: 120 },
+  expert: { cols: 6, rows: 5, pairs: 15, timed: 180 }
+};
+
+const SYMBOLS = [
+  { icon: '⚡', name: 'Pulse',    color: '#00FFFF' },
+  { icon: '🔥', name: 'Firewall', color: '#FF0040' },
+  { icon: '🌊', name: 'Data',     color: '#0088FF' },
+  { icon: '💎', name: 'Crystal',  color: '#FF00FF' },
+  { icon: '🔮', name: 'Holo',     color: '#AA44FF' },
+  { icon: '🧬', name: 'DNA',      color: '#00FF88' },
+  { icon: '🌐', name: 'Node',     color: '#FFEE00' },
+  { icon: '🔓', name: 'Lock',     color: '#FF8800' },
+  { icon: '👁️', name: 'Eye',     color: '#FF00FF' },
+  { icon: '🦾', name: 'Arm',      color: '#888888' },
+  { icon: '💿', name: 'Disc',     color: '#00FFFF' },
+  { icon: '🔧', name: 'Gear',     color: '#AAAAAA' },
+  { icon: '🧩', name: 'Puzzle',   color: '#00FF88' },
+  { icon: '🎯', name: 'Target',   color: '#FF0040' },
+  { icon: '🎲', name: 'Dice',     color: '#FFEE00' }
+];
+
+// ==================== STATE ====================
+let difficulty = 'easy';
+let gameMode = 'free';
+let cards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let totalPairs = 0;
+let steps = 0;
+let isLocked = false;
+let timerInterval = null;
+let elapsed = 0;
+let timeLeft = 0;
+let gameStarted = false;
+let gameActive = false;
+
+// ==================== FUNCTIONS ====================
+function selectDifficulty(d) {
+  if (d === difficulty) return;
+  document.querySelectorAll('[data-diff]').forEach(b => b.classList.toggle('active', b.dataset.diff === d));
+  difficulty = d;
+  newGame();
+}
+
+function selectMode(m) {
+  if (m === gameMode) return;
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  gameMode = m;
+  newGame();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function formatTime(s) {
+  const m = Math.floor(Math.abs(s) / 60);
+  const sec = Math.floor(Math.abs(s) % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+function getBestKey() { return `neonmem_best_${difficulty}_${gameMode}`; }
+function getBest() {
+  try { return JSON.parse(localStorage.getItem(getBestKey())) || null; }
+  catch { return null; }
+}
+function saveBest(data) { localStorage.setItem(getBestKey(), JSON.stringify(data)); }
+
+// ==================== GAME LOGIC ====================
+function newGame() {
+  stopTimer();
+  const config = DIFFICULTIES[difficulty];
+  totalPairs = config.pairs;
+  matchedPairs = 0;
+  steps = 0;
+  elapsed = 0;
+  timeLeft = config.timed;
+  flippedCards = [];
+  isLocked = false;
+  gameStarted = false;
+  gameActive = true;
+
+  document.getElementById('winOverlay').classList.add('hidden');
+  document.getElementById('failOverlay').classList.add('hidden');
+
+  // Build card deck
+  const selectedSymbols = SYMBOLS.slice(0, totalPairs);
+  cards = [];
+  selectedSymbols.forEach((sym, idx) => {
+    cards.push({ id: idx, symbol: sym });
+    cards.push({ id: idx, symbol: sym });
+  });
+  shuffle(cards);
+
+  // UI updates
+  document.getElementById('timerBox').classList.toggle('hidden', gameMode !== 'timed');
+  document.getElementById('timeBox').classList.toggle('hidden', gameMode === 'timed');
+  updateHUD();
+  renderGrid();
+}
+
+function renderGrid() {
+  const config = DIFFICULTIES[difficulty];
+  const grid = document.getElementById('cardGrid');
+
+  // Calculate card size
+  const vw = Math.min(window.innerWidth - 40, 480);
+  const gap = 8;
+  const cardW = Math.floor((vw - gap * (config.cols - 1)) / config.cols);
+  const cardH = Math.min(cardW, Math.floor(cardW * 1.3));
+
+  grid.style.gridTemplateColumns = `repeat(${config.cols}, ${cardW}px)`;
+  grid.style.gridTemplateRows = `repeat(${config.rows}, ${cardH}px)`;
+  grid.style.gap = `${gap}px`;
+  grid.innerHTML = '';
+
+  cards.forEach((card, idx) => {
+    const container = document.createElement('div');
+    container.className = 'card-container card-new';
+    container.style.width = cardW + 'px';
+    container.style.height = cardH + 'px';
+    container.style.animationDelay = (idx * 30) + 'ms';
+    container.dataset.index = idx;
+    container.onclick = () => flipCard(idx);
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    // Back (face down)
+    const back = document.createElement('div');
+    back.className = 'card-back';
+    const pattern = document.createElement('div');
+    pattern.className = 'card-back-pattern';
+    const text = document.createElement('div');
+    text.className = 'card-back-text';
+    text.textContent = 'NEON';
+    pattern.appendChild(text);
+    back.appendChild(pattern);
+
+    // Front (face up)
+    const front = document.createElement('div');
+    front.className = 'card-front';
+    front.style.background = '#0d0d1a';
+    front.style.border = `2px solid ${card.symbol.color}44`;
+    front.innerHTML = `<span style="font-size:${Math.min(cardW * 0.45, cardH * 0.35)}px;filter:drop-shadow(0 0 6px ${card.symbol.color});">${card.symbol.icon}</span>`;
+
+    inner.appendChild(back);
+    inner.appendChild(front);
+    container.appendChild(inner);
+
+    // Set CSS variable for match glow
+    container.style.setProperty('--match-color', card.symbol.color);
+
+    grid.appendChild(container);
+  });
+}
+
+function flipCard(idx) {
+  if (isLocked || !gameActive) return;
+  const container = document.querySelectorAll('.card-container')[idx];
+  if (!container || container.classList.contains('flipped') || container.classList.contains('matched')) return;
+
+  // Start timer on first flip
+  if (!gameStarted) {
+    gameStarted = true;
+    if (gameMode === 'timed') {
+      startTimedMode();
+    } else {
+      startFreeTimer();
+    }
+  }
+
+  container.classList.add('flipped');
+  flippedCards.push({ idx, container, card: cards[idx] });
+
+  if (flippedCards.length === 2) {
+    steps++;
+    updateHUD();
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  isLocked = true;
+  const [a, b] = flippedCards;
+
+  if (a.card.id === b.card.id) {
+    // Match!
+    setTimeout(() => {
+      a.container.classList.add('matched');
+      b.container.classList.add('matched');
+      matchedPairs++;
+      updateHUD();
+      flippedCards = [];
+      isLocked = false;
+
+      if (matchedPairs === totalPairs) {
+        onWin();
+      }
+    }, 300);
+  } else {
+    // Mismatch
+    setTimeout(() => {
+      a.container.classList.add('mismatch');
+      b.container.classList.add('mismatch');
+      setTimeout(() => {
+        a.container.classList.remove('flipped', 'mismatch');
+        b.container.classList.remove('flipped', 'mismatch');
+        flippedCards = [];
+        isLocked = false;
+      }, 400);
+    }, 600);
+  }
+}
+
+// ==================== TIMERS ====================
+function startFreeTimer() {
+  elapsed = 0;
+  timerInterval = setInterval(() => {
+    if (!gameActive) return;
+    elapsed++;
+    document.getElementById('timeDisplay').textContent = formatTime(elapsed);
+  }, 1000);
+}
+
+function startTimedMode() {
+  const config = DIFFICULTIES[difficulty];
+  timeLeft = config.timed;
+  timerInterval = setInterval(() => {
+    if (!gameActive) return;
+    timeLeft--;
+    const el = document.getElementById('timerDisplay');
+    el.textContent = formatTime(timeLeft);
+    if (timeLeft <= 15) {
+      el.classList.add('time-critical');
+      el.style.color = '#ff0040';
+      el.style.textShadow = '0 0 5px #ff0040, 0 0 10px #ff0040';
+    }
+    if (timeLeft <= 0) {
+      onFail();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ==================== END STATES ====================
+function getStars() {
+  // Stars based on steps relative to pairs
+  const ratio = steps / totalPairs;
+  if (ratio <= 1.5) return 3;
+  if (ratio <= 2.5) return 2;
+  return 1;
+}
+
+function onWin() {
+  gameActive = false;
+  stopTimer();
+  const stars = getStars();
+  const timeStr = gameMode === 'timed' ? formatTime(DIFFICULTIES[difficulty].timed - timeLeft) : formatTime(elapsed);
+
+  document.getElementById('winStats').innerHTML = `
+    Steps: <strong class="text-white">${steps}</strong> | Time: <strong class="text-white">${timeStr}</strong> | Difficulty: <strong class="text-white">${DIFFICULTIES[difficulty].name || difficulty}</strong>
+  `;
+  document.getElementById('winStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+  // Save best
+  const best = getBest();
+  if (!best || steps < best.steps || (steps === best.steps && (gameMode === 'timed' ? timeLeft > best.timeLeft : elapsed < best.elapsed))) {
+    saveBest({ steps, time: gameMode === 'timed' ? timeLeft : elapsed, stars, date: new Date().toLocaleDateString() });
+  }
+
+  setTimeout(() => {
+    document.getElementById('winOverlay').classList.remove('hidden');
+    showConfetti();
+  }, 500);
+}
+
+function onFail() {
+  gameActive = false;
+  stopTimer();
+  document.getElementById('failStats').innerHTML = `
+    Pairs found: <strong class="text-white">${matchedPairs}/${totalPairs}</strong> | Steps: <strong class="text-white">${steps}</strong>
+  `;
+  document.getElementById('failOverlay').classList.remove('hidden');
+}
+
+// ==================== UI ====================
+function updateHUD() {
+  document.getElementById('stepsDisplay').textContent = steps;
+  document.getElementById('pairsDisplay').textContent = `${matchedPairs}/${totalPairs}`;
+}
+
+function toggleBest() {
+  const el = document.getElementById('bestContent');
+  el.classList.toggle('hidden');
+  renderBestScores();
+}
+
+function renderBestScores() {
+  const el = document.getElementById('bestContent');
+  const diffs = ['easy', 'normal', 'hard', 'expert'];
+  let html = '';
+  diffs.forEach(d => {
+    const b = getBest.call(null, d); // need key per diff
+    // We'll just show current difficulty's best
+  });
+  const best = getBest();
+  if (best) {
+    html = `<div class="text-cyan-400 mb-1">${difficulty.toUpperCase()}</div>
+      <div>⭐ ${'⭐'.repeat(best.stars)} | Steps: ${best.steps} | Time: ${gameMode === 'timed' ? formatTime(best.time) + ' left' : formatTime(best.time)} | ${best.date}</div>`;
+  } else {
+    html = '<p class="text-gray-500">No scores yet for this mode.</p>';
+  }
+  el.innerHTML = html;
+}
+
+// ==================== EFFECTS ====================
+function showConfetti() {
+  const colors = ['#FF00FF', '#00FFFF', '#FFEE00', '#00FF88', '#FF0040'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.cssText = `left:${Math.random()*100}vw;top:-10px;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'0'};opacity:${0.7+Math.random()*0.3};`;
+    document.body.appendChild(el);
+    const dur = 1500 + Math.random() * 2000;
+    el.animate([
+      { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+      { transform: `translate(${(Math.random()-0.5)*200}px,${window.innerHeight+50}px) rotate(${360+Math.random()*720}deg)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(0.25,0.46,0.45,0.94)' });
+    setTimeout(() => el.remove(), dur);
+  }
+}
+
+function showNotification(text) {
+  const el = document.getElementById('notification');
+  el.textContent = text;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+}
+
+// ==================== RESIZE ====================
+window.addEventListener('resize', () => {
+  if (cards.length > 0) {
+    // Re-render preserving state
+    const grid = document.getElementById('cardGrid');
+    const containers = grid.querySelectorAll('.card-container');
+    containers.forEach((c, i) => {
+      const config = DIFFICULTIES[difficulty];
+      const vw = Math.min(window.innerWidth - 40, 480);
+      const gap = 8;
+      const cardW = Math.floor((vw - gap * (config.cols - 1)) / config.cols);
+      const cardH = Math.min(cardW, Math.floor(cardW * 1.3));
+      c.style.width = cardW + 'px';
+      c.style.height = cardH + 'px';
+      const icon = c.querySelector('.card-front span');
+      if (icon) icon.style.fontSize = Math.min(cardW * 0.45, cardH * 0.35) + 'px';
+    });
+  }
+});
+
+// ==================== INIT ====================
+newGame();
+</script>
+</body>
+</html>
