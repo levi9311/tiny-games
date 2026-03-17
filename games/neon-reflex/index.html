@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Neon Reflex</title>
+    <meta name="description" content="Neon Reflex - A cyberpunk reaction speed game. Tap the glowing targets as fast as you can before they fade away! Test your reflexes in this neon-lit challenge.">
+    <meta property="og:title" content="Neon Reflex - Reaction Speed Game">
+    <meta property="og:description" content="Test your reaction speed in this cyberpunk neon-lit challenge. Tap glowing targets before they fade!">
+    <meta property="og:image" content="https://via.placeholder.com/400x200.png?text=Neon+Reflex">
+    <meta property="og:type" content="website">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#0a0a0a',
+                            panel: '#111118',
+                            cyan: '#00ffff',
+                            magenta: '#ff00ff',
+                            yellow: '#ffee00',
+                            pink: '#ff2d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Neon glow text */
+        .neon-cyan { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff; }
+        .neon-magenta { color: #f0f; text-shadow: 0 0 5px #f0f, 0 0 10px #f0f, 0 0 20px #f0f; }
+        .neon-yellow { color: #ff0; text-shadow: 0 0 5px #ff0, 0 0 10px #ff0; }
+
+        /* Scan line overlay */
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.015) 2px,
+                rgba(0, 255, 255, 0.015) 4px
+            );
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Game canvas responsive */
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.15), inset 0 0 15px rgba(0, 255, 255, 0.05);
+        }
+
+        /* Buttons */
+        .cyber-btn {
+            position: relative;
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0ff;
+            background: transparent;
+            border: 2px solid #0ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            transition: all 0.2s;
+        }
+        .cyber-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), 0 0 40px rgba(0, 255, 255, 0.2);
+            color: #fff;
+            text-shadow: 0 0 10px #0ff;
+        }
+        .cyber-btn:active { transform: scale(0.96); }
+
+        /* Stat card */
+        .stat-card {
+            background: linear-gradient(135deg, rgba(17,17,24,0.95), rgba(10,10,10,0.95));
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 8px 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Pulse animation for targets */
+        @keyframes targetPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* Grid background */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .cyber-btn { padding: 10px 20px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body class="text-white scanlines grid-bg">
+    <div class="flex flex-col items-center justify-center min-h-screen p-3 sm:p-4">
+
+        <!-- HUD Bar -->
+        <div id="hud" class="hidden w-full max-w-lg flex justify-between items-center mb-3 gap-2">
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Score</div>
+                <div id="hudScore" class="text-xl font-bold neon-cyan">0</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Time</div>
+                <div id="hudTime" class="text-xl font-bold neon-yellow">30</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Combo</div>
+                <div id="hudCombo" class="text-xl font-bold neon-magenta">x1</div>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Menu Screen -->
+        <div id="menuScreen" class="absolute flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-3xl sm:text-5xl font-black neon-cyan mb-2 tracking-wider">NEON REFLEX</h1>
+            <p class="text-gray-400 text-sm sm:text-base mb-1">⚡ CYBERPUNK REACTION CHALLENGE ⚡</p>
+            <div class="my-4 sm:my-6 text-gray-500 text-xs sm:text-sm space-y-1">
+                <p>🔹 Tap / Click the glowing targets</p>
+                <p>🔹 Chain hits for combo multiplier</p>
+                <p>🔹 Miss 3 targets and it's over</p>
+            </div>
+            <button class="cyber-btn" onclick="startGame()">START GAME</button>
+            <div class="mt-4 stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Best Score</div>
+                <div id="bestScore" class="text-lg font-bold neon-yellow">0</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="overScreen" class="hidden absolute flex flex-col items-center justify-center text-center px-4">
+            <h2 class="text-2xl sm:text-4xl font-black neon-magenta mb-2">GAME OVER</h2>
+            <div class="my-4 space-y-2">
+                <div class="stat-card">
+                    <div class="text-[10px] uppercase tracking-widest text-gray-500">Final Score</div>
+                    <div id="finalScore" class="text-2xl font-bold neon-cyan">0</div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Hits</div>
+                        <div id="finalHits" class="text-lg font-bold text-green-400">0</div>
+                    </div>
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Max Combo</div>
+                        <div id="finalCombo" class="text-lg font-bold neon-magenta">x0</div>
+                    </div>
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Misses</div>
+                        <div id="finalMisses" class="text-lg font-bold text-red-400">0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="cyber-btn" onclick="startGame()">PLAY AGAIN</button>
+            <button class="cyber-btn mt-3 !border-gray-600 !text-gray-400" onclick="showMenu()">MENU</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ===== Canvas Setup =====
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const maxW = Math.min(window.innerWidth - 24, 500);
+            const maxH = Math.min(window.innerHeight - 160, 600);
+            const size = Math.min(maxW, maxH, 500);
+            canvas.width = size;
+            canvas.height = size;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // ===== Colors =====
+        const NEON_COLORS = [
+            { main: '#00ffff', glow: 'rgba(0,255,255,' },
+            { main: '#ff00ff', glow: 'rgba(255,0,255,' },
+            { main: '#ffee00', glow: 'rgba(255,238,0,' },
+            { main: '#ff2d95', glow: 'rgba(255,45,149,' },
+            { main: '#00ff88', glow: 'rgba(0,255,136,' },
+        ];
+
+        // ===== Game State =====
+        let state = 'menu'; // menu | playing | over
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let hits = 0;
+        let misses = 0;
+        let timeLeft = 30;
+        let targets = [];
+        let particles = [];
+        let floatingTexts = [];
+        let spawnTimer = 0;
+        let gameTimer = null;
+        let bestScore = parseInt(localStorage.getItem('neonReflexBest') || '0');
+
+        document.getElementById('bestScore').textContent = bestScore;
+
+        // ===== Target =====
+        class Target {
+            constructor() {
+                this.radius = 22 + Math.random() * 18;
+                this.x = this.radius + Math.random() * (canvas.width - this.radius * 2);
+                this.y = this.radius + Math.random() * (canvas.height - this.radius * 2);
+                this.maxLife = 80 + Math.random() * 60;
+                this.life = this.maxLife;
+                this.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+                this.scale = 0;
+                this.hit = false;
+                this.dying = false;
+                this.dyingTimer = 0;
+            }
+
+            update() {
+                if (this.dying) {
+                    this.dyingTimer++;
+                    this.scale = Math.max(0, this.scale - 0.08);
+                    return this.dyingTimer < 15;
+                }
+
+                this.scale = Math.min(1, this.scale + 0.1);
+                this.life--;
+                if (this.life <= 0) {
+                    misses++;
+                    spawnMissParticles(this.x, this.y);
+                    return false;
+                }
+                return true;
+            }
+
+            draw(ctx) {
+                const lifeRatio = this.life / this.maxLife;
+                const pulseScale = this.scale * (1 + Math.sin(Date.now() * 0.008) * 0.05);
+                const r = this.radius * pulseScale;
+
+                // Glow
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r * 1.8);
+                gradient.addColorStop(0, this.color.glow + '0.3)');
+                gradient.addColorStop(0.5, this.color.glow + '0.1)');
+                gradient.addColorStop(1, this.color.glow + '0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ring (life indicator)
+                ctx.strokeStyle = this.color.main;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * lifeRatio);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+
+                // Core
+                ctx.fillStyle = this.color.glow + '0.2)';
+                ctx.strokeStyle = this.color.main;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Inner dot
+                ctx.fillStyle = this.color.main;
+                ctx.globalAlpha = 0.9;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                // Urgency flash
+                if (lifeRatio < 0.3) {
+                    ctx.globalAlpha = Math.sin(Date.now() * 0.02) * 0.3 + 0.3;
+                    ctx.strokeStyle = '#ff0040';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, r + 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            contains(px, py) {
+                const dx = px - this.x;
+                const dy = py - this.y;
+                return Math.sqrt(dx * dx + dy * dy) <= this.radius * this.scale + 10;
+            }
+        }
+
+        // ===== Particles =====
+        class Particle {
+            constructor(x, y, color, type) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.type = type;
+                if (type === 'hit') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 5;
+                    this.vx = Math.cos(angle) * speed;
+                    this.vy = Math.sin(angle) * speed;
+                    this.life = 30 + Math.random() * 20;
+                    this.size = 2 + Math.random() * 3;
+                } else {
+                    this.vx = (Math.random() - 0.5) * 3;
+                    this.vy = -1 - Math.random() * 3;
+                    this.life = 40 + Math.random() * 20;
+                    this.size = 3 + Math.random() * 4;
+                }
+                this.maxLife = this.life;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.type === 'hit' ? this.color : '#ff0040';
+                ctx.beginPath();
+                if (this.type === 'hit') {
+                    ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+                } else {
+                    ctx.rect(this.x, this.y, this.size, this.size);
+                }
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.life = 40;
+                this.maxLife = 40;
+            }
+
+            update() {
+                this.y -= 1.5;
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${14 + (1 - alpha) * 6}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function spawnHitParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color, 'hit'));
+            }
+        }
+
+        function spawnMissParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                particles.push(new Particle(x, y, '#ff0040', 'miss'));
+            }
+            floatingTexts.push(new FloatingText(x, y - 20, 'MISS!', '#ff0040'));
+        }
+
+        // ===== Game Logic =====
+        function startGame() {
+            state = 'playing';
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            hits = 0;
+            misses = 0;
+            timeLeft = 30;
+            targets = [];
+            particles = [];
+            floatingTexts = [];
+            spawnTimer = 0;
+
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('overScreen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('hud').style.display = 'flex';
+            updateHUD();
+
+            if (gameTimer) clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                if (state !== 'playing') return;
+                timeLeft--;
+                document.getElementById('hudTime').textContent = timeLeft;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            state = 'over';
+            if (gameTimer) clearInterval(gameTimer);
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('neonReflexBest', bestScore);
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalHits').textContent = hits;
+            document.getElementById('finalCombo').textContent = 'x' + maxCombo;
+            document.getElementById('finalMisses').textContent = misses;
+            document.getElementById('overScreen').classList.remove('hidden');
+            document.getElementById('hud').classList.add('hidden');
+        }
+
+        function showMenu() {
+            state = 'menu';
+            targets = [];
+            particles = [];
+            floatingTexts = [];
+            document.getElementById('overScreen').classList.add('hidden');
+            document.getElementById('menuScreen').classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('hudScore').textContent = score;
+            document.getElementById('hudTime').textContent = timeLeft;
+            document.getElementById('hudCombo').textContent = combo > 1 ? 'x' + combo : 'x1';
+        }
+
+        // ===== Input =====
+        function handleTap(px, py) {
+            if (state !== 'playing') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (px - rect.left) * (canvas.width / rect.width);
+            const y = (py - rect.top) * (canvas.height / rect.height);
+
+            let hitTarget = false;
+            for (let i = targets.length - 1; i >= 0; i--) {
+                const t = targets[i];
+                if (!t.dying && t.contains(x, y)) {
+                    hitTarget = true;
+                    t.dying = true;
+
+                    combo++;
+                    hits++;
+                    if (combo > maxCombo) maxCombo = combo;
+
+                    const multiplier = Math.min(combo, 10);
+                    const points = 10 * multiplier;
+                    score += points;
+
+                    spawnHitParticles(t.x, t.y, t.color.main);
+                    floatingTexts.push(new FloatingText(t.x, t.y - 20, '+' + points, t.color.main));
+                    if (combo > 1) {
+                        floatingTexts.push(new FloatingText(t.x, t.y - 40, 'x' + combo, '#ff00ff'));
+                    }
+
+                    updateHUD();
+                    break;
+                }
+            }
+
+            if (!hitTarget) {
+                combo = 0;
+                updateHUD();
+            }
+        }
+
+        canvas.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleTap(touch.clientX, touch.clientY);
+        }, { passive: false });
+
+        // ===== Render Loop =====
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background grid
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.04)';
+            ctx.lineWidth = 1;
+            const gridSize = 40;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            if (state === 'playing') {
+                // Spawn targets
+                spawnTimer++;
+                const spawnInterval = Math.max(20, 50 - score * 0.3);
+                if (spawnTimer >= spawnInterval && targets.filter(t => !t.dying).length < 5) {
+                    targets.push(new Target());
+                    spawnTimer = 0;
+                }
+
+                // Check misses limit
+                if (misses >= 3) endGame();
+
+                // Update targets
+                targets = targets.filter(t => t.update());
+
+                // Update particles
+                particles = particles.filter(p => p.update());
+
+                // Update floating texts
+                floatingTexts = floatingTexts.filter(f => f.update());
+            }
+
+            // Draw targets
+            targets.forEach(t => t.draw(ctx));
+
+            // Draw particles
+            particles.forEach(p => p.draw(ctx));
+
+            // Draw floating texts
+            floatingTexts.forEach(f => f.draw(ctx));
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
