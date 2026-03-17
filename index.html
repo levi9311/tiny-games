@@ -1,28 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>AI Game Factory</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Game Factory</title>
 
-<h1>AI Game Factory</h1>
-<p>Daily AI Generated Games</p>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-ZQNX0P15SB"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-<ul id="game-list"></ul>
+      gtag("config", "G-ZQNX0P15SB");
+    </script>
+  </head>
+  <body>
+    <h1>AI Game Factory</h1>
+    <p>Daily AI Generated Games</p>
 
-<script>
-fetch('/games.json')
-  .then(r => r.json())
-  .then(games => {
-    const list = document.getElementById('game-list');
-    games.forEach(g => {
-      const li = document.createElement('li');
-      li.innerHTML = `<a href="${g.url}">${g.title}</a>`;
-      list.appendChild(li);
-    });
-  });
-</script>
+    <ul id="game-list"></ul>
 
-</body>
+    <script>
+      fetch("/games.json")
+        .then((r) => r.json())
+        .then((games) => {
+          const list = document.getElementById("game-list");
+          games.forEach((g) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="${g.url}">${g.title}</a>`;
+            list.appendChild(li);
+          });
+        });
+    </script>
+  </body>
 </html>
