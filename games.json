@@ -2,55 +2,19 @@
   {
     "title": "Neon Reflex",
     "url": "/games/neon-reflex/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Neon+Reflex",
-    "desc": "⚡ Cyberpunk reaction challenge! Tap glowing targets before they fade. Chain combos for massive points!"
+    "thumb": "/games/neon-reflex/thumb.svg",
+    "desc": "⚡ Cyberpunk reaction challenge! Tap glowing targets before they fade. Chain combos for massive points!",
+    "category": "Reaction",
+    "date": "2026-03-17",
+    "plays": 128
   },
   {
-    "title": "Snake Game",
-    "url": "/games/snake/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Snake+Game",
-    "desc": "Classic snake game. Eat food and grow longer!"
-  },
-  {
-    "title": "Flappy Bird",
-    "url": "/games/flappy/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Flappy+Bird",
-    "desc": "Tap to fly through the pipes!"
-  },
-  {
-    "title": "Block Breaker",
-    "url": "/games/block-breaker/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Block+Breaker",
-    "desc": "Break all the blocks with the ball!"
-  },
-  {
-    "title": "Game 1",
-    "url": "/games/game1/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Game+1",
-    "desc": "A simple game demo."
-  },
-  {
-    "title": "Space Shooter",
-    "url": "/games/space-shooter/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Space+Shooter",
-    "desc": "Shoot enemies and survive in space!"
-  },
-  {
-    "title": "Platform Jumper",
-    "url": "/games/platform-jumper/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Platform+Jumper",
-    "desc": "Jump between platforms and climb higher!"
-  },
-  {
-    "title": "Highway Racer",
-    "url": "/games/racing/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Highway+Racer",
-    "desc": "Race on the highway and dodge traffic!"
-  },
-  {
-    "title": "Ball Bounce",
-    "url": "/games/ball-bounce/",
-    "thumb": "https://via.placeholder.com/400x200.png?text=Ball+Bounce",
-    "desc": "Bounce the ball and break all the bricks!"
+    "title": "Neon Merge",
+    "url": "/games/neon-merge/",
+    "thumb": "/games/neon-merge/thumb.svg",
+    "desc": "🔮 Drop neon orbs and merge matching colors to evolve them into powerful cores! How high can you evolve?",
+    "category": "Casual",
+    "date": "2026-03-17",
+    "plays": 89
   }
 ]

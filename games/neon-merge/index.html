@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Neon Merge - Cyberpunk Merge Game | PlayPixelCraft</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <meta name="description" content="Neon Merge - A cyberpunk merge game by PlayPixelCraft. Tap to drop neon orbs and merge matching colors to evolve them. How far can you evolve the neon core? Free, no download required.">
+    <meta name="keywords" content="merge game, tap game, casual game, cyberpunk game, neon game, browser game, HTML5 game, puzzle game, PlayPixelCraft">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/games/neon-merge/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Neon Merge - Cyberpunk Merge Game">
+    <meta property="og:description" content="Tap to drop neon orbs and merge matching colors to evolve them into powerful neon cores!">
+    <meta property="og:url" content="https://playpixelcraft.com/games/neon-merge/">
+    <meta property="og:image" content="https://playpixelcraft.com/games/neon-merge/thumb.svg">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Merge - Cyberpunk Merge Game">
+    <meta name="twitter:description" content="Tap to drop neon orbs and merge matching colors to evolve them!">
+    <meta name="twitter:image" content="https://playpixelcraft.com/games/neon-merge/thumb.svg">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Neon Merge",
+      "description": "A cyberpunk merge game. Tap to drop neon orbs and merge matching colors to evolve them into powerful neon cores!",
+      "url": "https://playpixelcraft.com/games/neon-merge/",
+      "image": "https://playpixelcraft.com/games/neon-merge/thumb.svg",
+      "genre": ["Merge Game", "Casual Game", "Tap Game"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "playMode": ["SinglePlayer"],
+      "numberOfPlayers": { "@type": "QuantitativeValue", "value": 1, "minValue": 1, "maxValue": 1 },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
+      "author": { "@type": "Organization", "name": "PlayPixelCraft", "url": "https://playpixelcraft.com/" },
+      "publisher": { "@type": "Organization", "name": "PlayPixelCraft", "url": "https://playpixelcraft.com/" },
+      "datePublished": "2026-03-17",
+      "inLanguage": "en-US"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://playpixelcraft.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Neon Merge", "item": "https://playpixelcraft.com/games/neon-merge/" }
+      ]
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { bg: '#0a0a0a', panel: '#111118', cyan: '#00ffff', magenta: '#ff00ff', yellow: '#ffee00', pink: '#ff2d95' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .neon-cyan { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff; }
+        .neon-magenta { color: #f0f; text-shadow: 0 0 5px #f0f, 0 0 10px #f0f; }
+        .neon-yellow { color: #ff0; text-shadow: 0 0 5px #ff0, 0 0 10px #ff0; }
+
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.015) 2px, rgba(0,255,255,0.015) 4px);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid rgba(0,255,255,0.3);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,255,255,0.15), inset 0 0 15px rgba(0,255,255,0.05);
+        }
+
+        .cyber-btn {
+            padding: 12px 32px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #0ff;
+            background: transparent;
+            border: 2px solid #0ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+            transition: all 0.2s;
+        }
+        .cyber-btn:hover {
+            background: rgba(0,255,255,0.15);
+            box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.2);
+            color: #fff;
+            text-shadow: 0 0 10px #0ff;
+        }
+        .cyber-btn:active { transform: scale(0.96); }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(17,17,24,0.95), rgba(10,10,10,0.95));
+            border: 1px solid rgba(0,255,255,0.2);
+            border-radius: 4px;
+            padding: 6px 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 480px) {
+            .cyber-btn { padding: 10px 20px; font-size: 0.95rem; }
+        }
+
+        /* SEO content panel */
+        .seo-panel {
+            background: linear-gradient(135deg, rgba(17,17,24,0.9), rgba(10,10,10,0.9));
+            border: 1px solid rgba(0,255,255,0.1);
+            border-radius: 8px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease;
+            padding: 0 16px;
+            margin: 0;
+        }
+        .seo-panel.open {
+            max-height: 600px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        .seo-toggle {
+            color: #0ff;
+            opacity: 0.5;
+            font-size: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .seo-toggle:hover { opacity: 1; }
+
+        .game-footer {
+            border-top: 1px solid rgba(0,255,255,0.1);
+            padding: 12px 16px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body class="text-white scanlines">
+    <!-- Logo watermark -->
+    <a href="/" class="fixed top-3 left-3 z-50 opacity-60 hover:opacity-100 transition-opacity" title="PlayPixelCraft">
+      <img src="/assets/logo.svg" alt="PlayPixelCraft" class="h-6 sm:h-7">
+    </a>
+
+    <div class="flex flex-col items-center justify-center min-h-screen p-3 sm:p-4">
+
+        <!-- HUD -->
+        <div id="hud" class="hidden w-full max-w-lg flex justify-between items-center mb-1 gap-2">
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Score</div>
+                <div id="hudScore" class="text-lg font-bold neon-cyan">0</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Best</div>
+                <div id="hudBest" class="text-lg font-bold neon-yellow">0</div>
+            </div>
+            <div class="stat-card text-center flex-1">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Next</div>
+                <div id="hudNext" class="text-lg font-bold neon-magenta">--</div>
+            </div>
+        </div>
+
+        <!-- SEO Content Panel -->
+        <div class="w-full max-w-lg">
+            <div class="flex justify-center">
+                <span class="seo-toggle" onclick="toggleSEO()">About this game ▾</span>
+            </div>
+            <div id="seoPanel" class="seo-panel">
+                <h2 class="text-lg font-bold neon-magenta mb-2">Neon Merge - Cyberpunk Merge Game</h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-3">
+                    Neon Merge is a free browser-based merge game with a cyberpunk neon aesthetic. Drop glowing neon orbs onto the grid and watch matching colors merge and evolve into more powerful forms. Strategy meets reflexes in this addictive casual puzzle game.
+                </p>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">🎮 How to Play</h3>
+                <ul class="text-gray-400 text-sm space-y-1 mb-3 list-none">
+                    <li>🔸 <strong>Tap or click</strong> to drop a neon orb into a column</li>
+                    <li>🔸 <strong>Two matching orbs</strong> touching will automatically merge into the next level</li>
+                    <li>🔸 The evolution chain: Gray → Cyan → Green → Yellow → Orange → Pink → Magenta → Red → White</li>
+                    <li>🔸 <strong>Don't let orbs</strong> stack above the red danger line!</li>
+                    <li>🔸 Plan your drops — merged orbs apply gravity and can chain-merge</li>
+                    <li>🔸 Higher level merges = exponentially more points</li>
+                </ul>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">🔮 Features</h3>
+                <ul class="text-gray-400 text-sm space-y-1 list-none">
+                    <li>✦ Pure HTML5 Canvas — works on any modern browser</li>
+                    <li>✦ Responsive — optimized for phone, tablet, and desktop</li>
+                    <li>✦ 9-level neon evolution chain with unique colors</li>
+                    <li>✦ Merge particles and floating score effects</li>
+                    <li>✦ Local best score tracking</li>
+                </ul>
+                <div class="mt-3 pt-3 border-t border-gray-800">
+                    <p class="text-gray-500 text-xs">
+                        <strong class="text-gray-400">PlayPixelCraft</strong> — AI-generated browser games. New games added regularly. No sign-up required. Embed this game on your website for free.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Menu -->
+        <div id="menuScreen" class="absolute flex flex-col items-center justify-center text-center px-4">
+            <h1 class="text-3xl sm:text-5xl font-black neon-magenta mb-2 tracking-wider">NEON MERGE</h1>
+            <p class="text-gray-400 text-sm sm:text-base mb-1">🔮 CYBERPUNK MERGE CHALLENGE 🔮</p>
+            <div class="my-4 sm:my-6 text-gray-500 text-xs sm:text-sm space-y-1">
+                <p>🔸 Tap to drop neon orbs</p>
+                <p>🔸 Same colors merge & evolve</p>
+                <p>🔸 Reach the highest level!</p>
+                <p>🔸 Orbs above the line = game over</p>
+            </div>
+            <!-- Legend -->
+            <div id="legend" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+            <button class="cyber-btn" onclick="startGame()">START GAME</button>
+
+            <!-- Embed Code -->
+            <div class="mt-5 w-full max-w-xs text-left">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-gray-500 text-xs uppercase tracking-widest">Embed this game</p>
+                <button onclick="copyEmbed('neon-merge')" id="embedBtn" class="text-xs px-3 py-1 border border-cyan-800 text-cyan-400 rounded hover:bg-cyan-900/30 transition-colors">
+                  Copy Code
+                </button>
+              </div>
+              <textarea readonly class="w-full h-16 bg-black/60 border border-gray-700 rounded text-[10px] text-gray-400 p-2 resize-none font-mono" id="embedCode">&lt;iframe src="https://playpixelcraft.com/games/neon-merge/" width="400" height="700" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</textarea>
+              <p id="embedCopied" class="hidden text-green-400 text-xs mt-1 text-center">✓ Copied!</p>
+            </div>
+
+            <div class="mt-4 stat-card">
+                <div class="text-[10px] uppercase tracking-widest text-gray-500">Best Score</div>
+                <div id="bestScore" class="text-lg font-bold neon-yellow">0</div>
+            </div>
+        </div>
+
+        <!-- Game Over -->
+        <div id="overScreen" class="hidden absolute flex flex-col items-center justify-center text-center px-4">
+            <h2 class="text-2xl sm:text-4xl font-black neon-magenta mb-2">GAME OVER</h2>
+            <div class="my-4 space-y-2">
+                <div class="stat-card">
+                    <div class="text-[10px] uppercase tracking-widest text-gray-500">Final Score</div>
+                    <div id="finalScore" class="text-2xl font-bold neon-cyan">0</div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Merges</div>
+                        <div id="finalMerges" class="text-lg font-bold text-green-400">0</div>
+                    </div>
+                    <div class="stat-card flex-1">
+                        <div class="text-[10px] uppercase tracking-widest text-gray-500">Max Level</div>
+                        <div id="finalLevel" class="text-lg font-bold neon-magenta">0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="cyber-btn" onclick="startGame()">PLAY AGAIN</button>
+            <button class="cyber-btn mt-3 !border-gray-600 !text-gray-400" onclick="showMenu()">MENU</button>
+        </div>
+
+    </div>
+
+    <!-- Game Footer (SEO) -->
+    <footer class="game-footer max-w-lg mx-auto w-full">
+        <p class="text-gray-600 text-xs text-center">
+            <strong class="text-gray-500">Neon Merge</strong> — A free cyberpunk merge game by PlayPixelCraft. Drop, merge, and evolve neon orbs. No download required. Play now on any device.
+        </p>
+    </footer>
+
+    <script>
+        // ===== SEO Panel Toggle =====
+        function toggleSEO() {
+            const panel = document.getElementById('seoPanel');
+            panel.classList.toggle('open');
+        }
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // ===== Canvas Sizing =====
+        let COLS = 6;
+        let CELL_SIZE, BOARD_X, BOARD_Y, BOARD_W, BOARD_H, ORB_R;
+
+        function resizeCanvas() {
+            const maxW = Math.min(window.innerWidth - 24, 420);
+            const maxH = Math.min(window.innerHeight - 140, 600);
+            const size = Math.min(maxW, maxH, 420);
+            canvas.width = size;
+            canvas.height = size;
+            CELL_SIZE = Math.floor(size / (COLS + 1));
+            ORB_R = Math.floor(CELL_SIZE * 0.38);
+            BOARD_X = Math.floor((size - CELL_SIZE * COLS) / 2);
+            BOARD_Y = CELL_SIZE;
+            BOARD_W = CELL_SIZE * COLS;
+            BOARD_H = size - CELL_SIZE * 2;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', () => { resizeCanvas(); });
+
+        // ===== Orb Levels =====
+        const LEVELS = [
+            { color: '#888888', name: 'Gray',    glow: 'rgba(136,136,136,' },
+            { color: '#00ffff', name: 'Cyan',    glow: 'rgba(0,255,255,' },
+            { color: '#00ff88', name: 'Green',   glow: 'rgba(0,255,136,' },
+            { color: '#ffee00', name: 'Yellow',  glow: 'rgba(255,238,0,' },
+            { color: '#ff8800', name: 'Orange',  glow: 'rgba(255,136,0,' },
+            { color: '#ff2d95', name: 'Pink',    glow: 'rgba(255,45,149,' },
+            { color: '#ff00ff', name: 'Magenta', glow: 'rgba(255,0,255,' },
+            { color: '#ff0040', name: 'Red',     glow: 'rgba(255,0,64,' },
+            { color: '#ffffff', name: 'White',   glow: 'rgba(255,255,255,' },
+        ];
+
+        // ===== Build Legend =====
+        const legendEl = document.getElementById('legend');
+        LEVELS.forEach((l, i) => {
+            if (i === 0) return;
+            const d = document.createElement('div');
+            d.className = 'flex items-center gap-1';
+            d.innerHTML = `<div style="width:12px;height:12px;border-radius:50%;background:${l.color};box-shadow:0 0 6px ${l.color}"></div><span class="text-[10px] text-gray-500">Lv${i}</span>`;
+            legendEl.appendChild(d);
+        });
+
+        // ===== Game State =====
+        let state = 'menu';
+        let grid = [];
+        let nextLevel = 1;
+        let score = 0;
+        let merges = 0;
+        let maxLevel = 0;
+        let bestScore = parseInt(localStorage.getItem('neonMergeBest') || '0');
+        let gameOverTriggered = false;
+        let particles = [];
+        let floatingTexts = [];
+        let previewCol = -1;
+        let dropAnim = null; // { col, level, y, targetY, speed }
+
+        document.getElementById('bestScore').textContent = bestScore;
+
+        // ===== Grid Helpers =====
+        function getCellPos(row, col) {
+            return {
+                x: BOARD_X + col * CELL_SIZE + CELL_SIZE / 2,
+                y: BOARD_Y + row * CELL_SIZE + CELL_SIZE / 2
+            };
+        }
+
+        function getColFromX(px) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (px - rect.left) * (canvas.width / rect.width);
+            const col = Math.floor((x - BOARD_X) / CELL_SIZE);
+            if (col < 0 || col >= COLS) return -1;
+            return col;
+        }
+
+        function findLowestEmpty(col) {
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+            for (let row = maxRow - 1; row >= 0; row--) {
+                if (!grid[row] || !grid[row][col]) return row;
+            }
+            return -1;
+        }
+
+        // ===== Particles & Effects =====
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y; this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 4;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 25 + Math.random() * 15;
+                this.maxLife = this.life;
+                this.size = 2 + Math.random() * 3;
+            }
+            update() { this.x += this.vx; this.y += this.vy; this.vx *= 0.95; this.vy *= 0.95; this.life--; return this.life > 0; }
+            draw(ctx) {
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * (this.life / this.maxLife), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, text, color) {
+                this.x = x; this.y = y; this.text = text; this.color = color;
+                this.life = 35; this.maxLife = 35;
+            }
+            update() { this.y -= 1.2; this.life--; return this.life > 0; }
+            draw(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${13 + (1 - alpha) * 5}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function spawnMergeEffect(x, y, color) {
+            for (let i = 0; i < 12; i++) particles.push(new Particle(x, y, color));
+        }
+
+        // ===== Merge Logic =====
+        function checkMerges() {
+            let merged = true;
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+
+            while (merged) {
+                merged = false;
+                for (let row = 0; row < maxRow; row++) {
+                    for (let col = 0; col < COLS; col++) {
+                        if (!grid[row] || !grid[row][col]) continue;
+                        const level = grid[row][col];
+
+                        // Check right
+                        if (col + 1 < COLS && grid[row][col + 1] === level) {
+                            const pos = getCellPos(row, col);
+                            grid[row][col] = level + 1;
+                            grid[row][col + 1] = null;
+
+                            merges++;
+                            const points = Math.pow(2, level) * 10;
+                            score += points;
+                            if (level + 1 > maxLevel) maxLevel = level + 1;
+
+                            spawnMergeEffect(pos.x, pos.y, LEVELS[level].color);
+                            floatingTexts.push(new FloatingText(pos.x, pos.y - 20, '+' + points, LEVELS[level + 1]?.color || '#fff'));
+                            if (level + 1 >= 2) {
+                                floatingTexts.push(new FloatingText(pos.x + 30, pos.y - 10, LEVELS[level + 1]?.name || 'MAX', '#fff'));
+                            }
+
+                            updateHUD();
+                            merged = true;
+                        }
+
+                        // Check down (gravity: orbs stack, so check below)
+                        if (row + 1 < maxRow && grid[row + 1] && grid[row + 1][col] === level) {
+                            const pos = getCellPos(row, col);
+                            grid[row][col] = level + 1;
+                            grid[row + 1][col] = null;
+
+                            merges++;
+                            const points = Math.pow(2, level) * 10;
+                            score += points;
+                            if (level + 1 > maxLevel) maxLevel = level + 1;
+
+                            spawnMergeEffect(pos.x, pos.y, LEVELS[level].color);
+                            floatingTexts.push(new FloatingText(pos.x, pos.y - 20, '+' + points, LEVELS[level + 1]?.color || '#fff'));
+
+                            updateHUD();
+                            merged = true;
+                        }
+                    }
+                }
+            }
+
+            // Apply gravity
+            applyGravity();
+        }
+
+        function applyGravity() {
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+            for (let col = 0; col < COLS; col++) {
+                // Collect non-null from bottom to top
+                let orbs = [];
+                for (let row = maxRow - 1; row >= 0; row--) {
+                    if (grid[row] && grid[row][col] != null) {
+                        orbs.push(grid[row][col]);
+                        grid[row][col] = null;
+                    }
+                }
+                // Place back from bottom
+                for (let i = 0; i < orbs.length; i++) {
+                    const row = maxRow - 1 - i;
+                    if (!grid[row]) grid[row] = [];
+                    grid[row][col] = orbs[i];
+                }
+            }
+        }
+
+        function checkGameOver() {
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+            for (let col = 0; col < COLS; col++) {
+                if (grid[0] && grid[0][col] != null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // ===== Drop Orb =====
+        function dropOrb(col) {
+            if (state !== 'playing' || dropAnim) return;
+            const row = findLowestEmpty(col);
+            if (row === -1) return;
+
+            const targetPos = getCellPos(row, col);
+            dropAnim = {
+                level: nextLevel,
+                col: col,
+                row: row,
+                y: BOARD_Y - CELL_SIZE / 2,
+                targetY: targetPos.y,
+                speed: 12
+            };
+        }
+
+        // ===== Copy Embed =====
+        function copyEmbed(slug) {
+            const code = `<iframe src="https://playpixelcraft.com/games/${slug}/" width="400" height="700" frameborder="0" allowfullscreen></iframe>`;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('embedBtn');
+                const msg = document.getElementById('embedCopied');
+                btn.textContent = 'Copied!';
+                msg.classList.remove('hidden');
+                setTimeout(() => {
+                    btn.textContent = 'Copy Code';
+                    msg.classList.add('hidden');
+                }, 2000);
+            }).catch(() => {
+                const ta = document.getElementById('embedCode');
+                ta.select();
+                document.execCommand('copy');
+                const btn = document.getElementById('embedBtn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000);
+            });
+        }
+
+        // ===== Game Logic =====
+        function startGame() {
+            state = 'playing';
+            score = 0;
+            merges = 0;
+            maxLevel = 0;
+            gameOverTriggered = false;
+            nextLevel = 1;
+            particles = [];
+            floatingTexts = [];
+            dropAnim = null;
+
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+            grid = [];
+            for (let row = 0; row < maxRow; row++) {
+                grid[row] = [];
+                for (let col = 0; col < COLS; col++) {
+                    grid[row][col] = null;
+                }
+            }
+
+            // Spawn random next
+            nextLevel = Math.random() < 0.7 ? 1 : (Math.random() < 0.5 ? 2 : 3);
+
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('overScreen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('hud').style.display = 'flex';
+            updateHUD();
+        }
+
+        function endGame() {
+            state = 'over';
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('neonMergeBest', bestScore);
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalMerges').textContent = merges;
+            document.getElementById('finalLevel').textContent = 'Lv' + maxLevel;
+            document.getElementById('overScreen').classList.remove('hidden');
+            document.getElementById('hud').classList.add('hidden');
+        }
+
+        function showMenu() {
+            state = 'menu';
+            particles = []; floatingTexts = [];
+            document.getElementById('overScreen').classList.add('hidden');
+            document.getElementById('menuScreen').classList.remove('hidden');
+        }
+
+        function updateHUD() {
+            document.getElementById('hudScore').textContent = score;
+            document.getElementById('hudBest').textContent = bestScore;
+            document.getElementById('hudNext').textContent = LEVELS[nextLevel]?.name || '--';
+        }
+
+        function pickNextLevel() {
+            nextLevel = Math.random() < 0.55 ? 1 : (Math.random() < 0.5 ? 2 : 3);
+            updateHUD();
+        }
+
+        // ===== Input =====
+        canvas.addEventListener('click', (e) => {
+            const col = getColFromX(e.clientX);
+            if (col >= 0) dropOrb(col);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const col = getColFromX(touch.clientX);
+            if (col >= 0) dropOrb(col);
+        }, { passive: false });
+
+        canvas.addEventListener('mousemove', (e) => {
+            previewCol = getColFromX(e.clientX);
+        });
+        canvas.addEventListener('mouseleave', () => { previewCol = -1; });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            previewCol = getColFromX(e.touches[0].clientX);
+        }, { passive: false });
+
+        // ===== Draw =====
+        function drawOrb(x, y, level, alpha = 1) {
+            const info = LEVELS[level] || LEVELS[0];
+            const r = ORB_R;
+
+            ctx.globalAlpha = alpha;
+
+            // Glow
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+            grad.addColorStop(0, info.glow + '0.35)');
+            grad.addColorStop(0.5, info.glow + '0.1)');
+            grad.addColorStop(1, info.glow + '0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Body
+            const bodyGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+            bodyGrad.addColorStop(0, '#ffffff');
+            bodyGrad.addColorStop(0.3, info.color);
+            bodyGrad.addColorStop(1, info.glow + '0.6)');
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Border
+            ctx.strokeStyle = info.color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Level number
+            ctx.fillStyle = '#000';
+            ctx.font = `bold ${r * 0.9}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(level, x, y + 1);
+
+            ctx.globalAlpha = 1;
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid bg
+            ctx.fillStyle = 'rgba(0,255,255,0.02)';
+            ctx.fillRect(BOARD_X, BOARD_Y, BOARD_W, BOARD_H);
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(0,255,255,0.06)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= COLS; i++) {
+                const x = BOARD_X + i * CELL_SIZE;
+                ctx.beginPath(); ctx.moveTo(x, BOARD_Y); ctx.lineTo(x, BOARD_Y + BOARD_H); ctx.stroke();
+            }
+            const maxRow = Math.floor(BOARD_H / CELL_SIZE);
+            for (let j = 0; j <= maxRow; j++) {
+                const y = BOARD_Y + j * CELL_SIZE;
+                ctx.beginPath(); ctx.moveTo(BOARD_X, y); ctx.lineTo(BOARD_X + BOARD_W, y); ctx.stroke();
+            }
+
+            // Danger line
+            const dangerY = BOARD_Y + CELL_SIZE * 0.5;
+            ctx.strokeStyle = 'rgba(255,0,64,0.4)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.beginPath(); ctx.moveTo(BOARD_X, dangerY); ctx.lineTo(BOARD_X + BOARD_W, dangerY); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(255,0,64,0.5)';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('DANGER', BOARD_X + 4, dangerY - 4);
+
+            // Preview column highlight
+            if (previewCol >= 0 && state === 'playing' && !dropAnim) {
+                ctx.fillStyle = 'rgba(0,255,255,0.04)';
+                ctx.fillRect(BOARD_X + previewCol * CELL_SIZE, BOARD_Y, CELL_SIZE, BOARD_H);
+
+                // Preview orb
+                const previewY = BOARD_Y - CELL_SIZE / 2;
+                drawOrb(BOARD_X + previewCol * CELL_SIZE + CELL_SIZE / 2, previewY, nextLevel, 0.4);
+            }
+
+            // Draw grid orbs
+            for (let row = 0; row < maxRow; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    if (grid[row] && grid[row][col] != null) {
+                        const pos = getCellPos(row, col);
+                        drawOrb(pos.x, pos.y, grid[row][col]);
+                    }
+                }
+            }
+
+            // Drop animation
+            if (dropAnim) {
+                dropAnim.y += dropAnim.speed;
+                dropAnim.speed += 0.8;
+                const dropX = BOARD_X + dropAnim.col * CELL_SIZE + CELL_SIZE / 2;
+                drawOrb(dropX, dropAnim.y, dropAnim.level);
+
+                if (dropAnim.y >= dropAnim.targetY) {
+                    // Place orb
+                    if (!grid[dropAnim.row]) grid[dropAnim.row] = [];
+                    grid[dropAnim.row][dropAnim.col] = dropAnim.level;
+                    dropAnim = null;
+
+                    // Check merges
+                    checkMerges();
+
+                    // Pick next
+                    pickNextLevel();
+
+                    // Check game over
+                    if (checkGameOver() && !gameOverTriggered) {
+                        gameOverTriggered = true;
+                        setTimeout(() => endGame(), 300);
+                    }
+                }
+            }
+
+            // Particles
+            particles = particles.filter(p => { p.draw(ctx); return p.update(); });
+            floatingTexts = floatingTexts.filter(f => { f.draw(ctx); return f.update(); });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

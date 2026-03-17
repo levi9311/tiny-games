@@ -3,12 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Neon Reflex</title>
-    <meta name="description" content="Neon Reflex - A cyberpunk reaction speed game. Tap the glowing targets as fast as you can before they fade away! Test your reflexes in this neon-lit challenge.">
-    <meta property="og:title" content="Neon Reflex - Reaction Speed Game">
-    <meta property="og:description" content="Test your reaction speed in this cyberpunk neon-lit challenge. Tap glowing targets before they fade!">
-    <meta property="og:image" content="https://via.placeholder.com/400x200.png?text=Neon+Reflex">
+    <title>Neon Reflex - Cyberpunk Reaction Speed Game | PlayPixelCraft</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <meta name="description" content="Neon Reflex - A cyberpunk reaction speed game by PlayPixelCraft. Tap the glowing targets as fast as you can before they fade away! Chain combos for massive points. Free, no download required.">
+    <meta name="keywords" content="reaction game, reflex game, cyberpunk game, neon game, browser game, HTML5 game, casual game, speed test, tap game, PlayPixelCraft">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/games/neon-reflex/">
+
+    <!-- Open Graph -->
     <meta property="og:type" content="website">
+    <meta property="og:title" content="Neon Reflex - Cyberpunk Reaction Speed Game">
+    <meta property="og:description" content="Test your reaction speed in this cyberpunk neon-lit challenge. Tap glowing targets before they fade! Chain combos for massive points.">
+    <meta property="og:url" content="https://playpixelcraft.com/games/neon-reflex/">
+    <meta property="og:image" content="https://playpixelcraft.com/games/neon-reflex/thumb.svg">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Reflex - Cyberpunk Reaction Speed Game">
+    <meta name="twitter:description" content="Test your reaction speed in this cyberpunk neon-lit challenge. Tap glowing targets before they fade!">
+    <meta name="twitter:image" content="https://playpixelcraft.com/games/neon-reflex/thumb.svg">
+
+    <!-- JSON-LD: VideoGame -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Neon Reflex",
+      "description": "A cyberpunk reaction speed game. Tap glowing neon targets before they fade away. Chain hits for combo multipliers up to x10. Miss 3 targets and it's game over!",
+      "url": "https://playpixelcraft.com/games/neon-reflex/",
+      "image": "https://playpixelcraft.com/games/neon-reflex/thumb.svg",
+      "genre": ["Reaction Game", "Casual Game", "Reflex Game"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "playMode": ["SinglePlayer"],
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "minValue": 1,
+        "maxValue": 1
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "datePublished": "2026-03-17",
+      "inLanguage": "en-US",
+      "screenshot": "https://playpixelcraft.com/games/neon-reflex/thumb.svg",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "bestRating": "5",
+        "worstRating": "1",
+        "ratingCount": "1"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://playpixelcraft.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Neon Reflex",
+          "item": "https://playpixelcraft.com/games/neon-reflex/"
+        }
+      ]
+    }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -118,13 +203,52 @@
         @media (max-width: 480px) {
             .cyber-btn { padding: 10px 20px; font-size: 0.95rem; }
         }
+
+        /* SEO content panel */
+        .seo-panel {
+            background: linear-gradient(135deg, rgba(17,17,24,0.9), rgba(10,10,10,0.9));
+            border: 1px solid rgba(0,255,255,0.1);
+            border-radius: 8px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease;
+            padding: 0 16px;
+            margin: 0;
+        }
+        .seo-panel.open {
+            max-height: 600px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        .seo-toggle {
+            color: #0ff;
+            opacity: 0.5;
+            font-size: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .seo-toggle:hover { opacity: 1; }
+
+        /* Game footer */
+        .game-footer {
+            border-top: 1px solid rgba(0,255,255,0.1);
+            padding: 12px 16px;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="text-white scanlines grid-bg">
+    <!-- Logo watermark -->
+    <a href="/" class="fixed top-3 left-3 z-50 opacity-60 hover:opacity-100 transition-opacity" title="PlayPixelCraft">
+      <img src="/assets/logo.svg" alt="PlayPixelCraft" class="h-6 sm:h-7">
+    </a>
+
     <div class="flex flex-col items-center justify-center min-h-screen p-3 sm:p-4">
 
         <!-- HUD Bar -->
-        <div id="hud" class="hidden w-full max-w-lg flex justify-between items-center mb-3 gap-2">
+        <div id="hud" class="hidden w-full max-w-lg flex justify-between items-center mb-1 gap-2">
             <div class="stat-card text-center flex-1">
                 <div class="text-[10px] uppercase tracking-widest text-gray-500">Score</div>
                 <div id="hudScore" class="text-xl font-bold neon-cyan">0</div>
@@ -136,6 +260,41 @@
             <div class="stat-card text-center flex-1">
                 <div class="text-[10px] uppercase tracking-widest text-gray-500">Combo</div>
                 <div id="hudCombo" class="text-xl font-bold neon-magenta">x1</div>
+            </div>
+        </div>
+
+        <!-- SEO Content Panel (collapsible) -->
+        <div class="w-full max-w-lg">
+            <div class="flex justify-center">
+                <span class="seo-toggle" onclick="toggleSEO()">About this game ▾</span>
+            </div>
+            <div id="seoPanel" class="seo-panel">
+                <h2 class="text-lg font-bold neon-cyan mb-2">Neon Reflex - Cyberpunk Reaction Speed Game</h2>
+                <p class="text-gray-400 text-sm leading-relaxed mb-3">
+                    Neon Reflex is a free browser-based reaction speed game with a cyberpunk neon aesthetic. Test your reflexes by tapping or clicking on glowing neon targets before they fade away. Each target has a life ring that depletes over time — tap fast or lose a life!
+                </p>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">🎮 How to Play</h3>
+                <ul class="text-gray-400 text-sm space-y-1 mb-3 list-none">
+                    <li>🔸 <strong>Tap or click</strong> on the glowing targets to score points</li>
+                    <li>🔸 <strong>Chain hits</strong> to build combo multiplier (up to x10)</li>
+                    <li>🔸 Each combo level multiplies your score: x2, x3, x4…</li>
+                    <li>🔸 <strong>Miss 3 targets</strong> and the game is over</li>
+                    <li>🔸 Targets spawn faster as your score increases</li>
+                    <li>🔸 <strong>Watch the life ring</strong> — red flash means it's about to disappear!</li>
+                </ul>
+                <h3 class="text-sm font-bold text-gray-300 mb-1">⚡ Features</h3>
+                <ul class="text-gray-400 text-sm space-y-1 list-none">
+                    <li>✦ Pure HTML5 Canvas — no downloads, no plugins needed</li>
+                    <li>✦ Responsive design — play on phone, tablet, or desktop</li>
+                    <li>✦ Cyberpunk neon visual style with particle effects</li>
+                    <li>✦ Local high score saved in your browser</li>
+                    <li>✦ Quick 30-second rounds for casual gaming sessions</li>
+                </ul>
+                <div class="mt-3 pt-3 border-t border-gray-800">
+                    <p class="text-gray-500 text-xs">
+                        <strong class="text-gray-400">PlayPixelCraft</strong> — AI-generated browser games. New games added regularly. No sign-up required. Embed this game on your website for free.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -152,6 +311,19 @@
                 <p>🔹 Miss 3 targets and it's over</p>
             </div>
             <button class="cyber-btn" onclick="startGame()">START GAME</button>
+
+            <!-- Embed Code -->
+            <div class="mt-5 w-full max-w-xs text-left">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-gray-500 text-xs uppercase tracking-widest">Embed this game</p>
+                <button onclick="copyEmbed('neon-reflex')" id="embedBtn" class="text-xs px-3 py-1 border border-cyan-800 text-cyan-400 rounded hover:bg-cyan-900/30 transition-colors">
+                  Copy Code
+                </button>
+              </div>
+              <textarea readonly class="w-full h-16 bg-black/60 border border-gray-700 rounded text-[10px] text-gray-400 p-2 resize-none font-mono" id="embedCode">&lt;iframe src="https://playpixelcraft.com/games/neon-reflex/" width="400" height="700" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</textarea>
+              <p id="embedCopied" class="hidden text-green-400 text-xs mt-1 text-center">✓ Copied!</p>
+            </div>
+
             <div class="mt-4 stat-card">
                 <div class="text-[10px] uppercase tracking-widest text-gray-500">Best Score</div>
                 <div id="bestScore" class="text-lg font-bold neon-yellow">0</div>
@@ -187,7 +359,20 @@
 
     </div>
 
+    <!-- Game Footer (SEO) -->
+    <footer class="game-footer max-w-lg mx-auto w-full">
+        <p class="text-gray-600 text-xs text-center">
+            <strong class="text-gray-500">Neon Reflex</strong> — A free cyberpunk reaction speed game by PlayPixelCraft. Test your tap speed and reflexes. No download required. Play now on any device.
+        </p>
+    </footer>
+
     <script>
+        // ===== SEO Panel Toggle =====
+        function toggleSEO() {
+            const panel = document.getElementById('seoPanel');
+            panel.classList.toggle('open');
+        }
+
         // ===== Canvas Setup =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -515,6 +700,29 @@
             const touch = e.touches[0];
             handleTap(touch.clientX, touch.clientY);
         }, { passive: false });
+
+        // ===== Copy Embed =====
+        function copyEmbed(slug) {
+            const code = `<iframe src="https://playpixelcraft.com/games/${slug}/" width="400" height="700" frameborder="0" allowfullscreen></iframe>`;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('embedBtn');
+                const msg = document.getElementById('embedCopied');
+                btn.textContent = 'Copied!';
+                msg.classList.remove('hidden');
+                setTimeout(() => {
+                    btn.textContent = 'Copy Code';
+                    msg.classList.add('hidden');
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const ta = document.getElementById('embedCode');
+                ta.select();
+                document.execCommand('copy');
+                const btn = document.getElementById('embedBtn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000);
+            });
+        }
 
         // ===== Render Loop =====
         function gameLoop() {

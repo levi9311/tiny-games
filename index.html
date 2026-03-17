@@ -3,7 +3,86 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Game Factory</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+    <title>PlayPixelCraft - AI Generated Browser Games</title>
+    <meta name="description" content="PlayPixelCraft is a collection of free AI-generated browser games with cyberpunk neon style. Play instantly on desktop, mobile, and tablet. No downloads required.">
+    <meta name="keywords" content="browser games, AI games, free online games, cyberpunk games, HTML5 games, pixel games, casual games, PlayPixelCraft">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PlayPixelCraft - AI Generated Browser Games">
+    <meta property="og:description" content="Free AI-generated browser games with cyberpunk neon style. Play instantly, no downloads required.">
+    <meta property="og:url" content="https://playpixelcraft.com/">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PlayPixelCraft - AI Generated Browser Games">
+    <meta name="twitter:description" content="Free AI-generated browser games with cyberpunk neon style. Play instantly, no downloads required.">
+
+    <!-- JSON-LD: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "PlayPixelCraft",
+      "url": "https://playpixelcraft.com/",
+      "description": "Free AI-generated browser games with cyberpunk neon style."
+    }
+    </script>
+
+    <!-- JSON-LD: ItemList (game collection) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "PlayPixelCraft Game Collection",
+      "description": "A curated collection of AI-generated browser games.",
+      "numberOfItems": 2,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "VideoGame",
+            "name": "Neon Reflex",
+            "url": "https://playpixelcraft.com/games/neon-reflex/",
+            "description": "A cyberpunk reaction speed game. Tap glowing targets before they fade away!",
+            "genre": ["Reaction Game", "Casual Game"],
+            "gamePlatform": ["Web Browser", "HTML5"],
+            "applicationCategory": "Game",
+            "operatingSystem": "Any",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "image": "https://playpixelcraft.com/games/neon-reflex/thumb.svg",
+            "playMode": ["SinglePlayer"],
+            "author": { "@type": "Organization", "name": "PlayPixelCraft" }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "VideoGame",
+            "name": "Neon Merge",
+            "url": "https://playpixelcraft.com/games/neon-merge/",
+            "description": "Drop neon orbs and merge matching colors to evolve them into powerful cores!",
+            "genre": ["Merge Game", "Casual Game", "Tap Game"],
+            "gamePlatform": ["Web Browser", "HTML5"],
+            "applicationCategory": "Game",
+            "operatingSystem": "Any",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "image": "https://playpixelcraft.com/games/neon-merge/thumb.svg",
+            "playMode": ["SinglePlayer"],
+            "author": { "@type": "Organization", "name": "PlayPixelCraft" }
+          }
+        }
+      ]
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google tag (gtag.js) -->
@@ -147,6 +226,20 @@
         color: #0ff;
         opacity: 0.6;
       }
+
+      /* Active button */
+      .glow-button.active {
+        box-shadow:
+          0 0 8px #0ff,
+          0 0 16px #f0f;
+      }
+      .glow-button:not(.active) {
+        opacity: 0.5;
+        background: linear-gradient(90deg, #333, #444);
+      }
+      .glow-button:not(.active):hover {
+        opacity: 0.8;
+      }
     </style>
   </head>
   <body class="text-white min-h-screen flex flex-col">
@@ -155,9 +248,11 @@
 
     <!-- header -->
     <header class="p-6 text-center z-10 relative">
-      <h1 class="text-4xl md:text-5xl font-bold neon-text">AI Game Factory</h1>
-      <p class="mt-2 text-lg md:text-xl opacity-80 neon-text">
-        Daily AI Generated Games
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <img src="/assets/logo.svg" alt="PlayPixelCraft" class="h-12 sm:h-14">
+      </div>
+      <p class="text-base md:text-lg text-gray-400">
+        Play a new AI-generated game every day. No download.
       </p>
 
       <!-- 搜索栏 -->
@@ -168,24 +263,40 @@
           placeholder="Search games..."
           class="search-input w-60 md:w-96"
         />
-        <button class="glow-button px-4 py-2 rounded-md font-bold">
+        <button id="searchBtn" class="glow-button px-4 py-2 rounded-md font-bold">
           Search
         </button>
       </div>
 
-      <!-- 分类 -->
+      <!-- 排序 & 分类 -->
       <div class="mt-4 flex justify-center gap-2 flex-wrap">
-        <button class="glow-button px-3 py-1 rounded-full text-sm">
+        <button class="glow-button px-3 py-1 rounded-full text-sm sort-btn active" data-sort="latest">
           Latest
         </button>
-        <button class="glow-button px-3 py-1 rounded-full text-sm">
+        <button class="glow-button px-3 py-1 rounded-full text-sm sort-btn" data-sort="popular">
           Popular
         </button>
-        <button class="glow-button px-3 py-1 rounded-full text-sm">
+        <span class="text-gray-600 mx-1">|</span>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn active" data-filter="All">
+          All
+        </button>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Reaction">
+          Reaction
+        </button>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Puzzle">
+          Puzzle
+        </button>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Action">
           Action
         </button>
-        <button class="glow-button px-3 py-1 rounded-full text-sm">
-          Puzzle
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Casual">
+          Casual
+        </button>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Rhythm">
+          Rhythm
+        </button>
+        <button class="glow-button px-3 py-1 rounded-full text-sm filter-btn" data-filter="Idle">
+          Idle
         </button>
       </div>
     </header>
@@ -208,6 +319,11 @@
         neonLines.appendChild(line);
       }
 
+      // State
+      let currentSort = "latest";
+      let currentFilter = "All";
+      let searchQuery = "";
+
       // 渲染游戏卡片
       fetch("/games.json")
         .then((r) => r.json())
@@ -215,16 +331,63 @@
           const main = document.querySelector("main");
           const searchInput = document.getElementById("search");
 
-          function renderList(filteredGames) {
+          function getFilteredSortedGames() {
+            let filtered = [...games];
+
+            // Filter by category
+            if (currentFilter !== "All") {
+              filtered = filtered.filter(
+                (g) => g.category && g.category === currentFilter
+              );
+            }
+
+            // Filter by search query (title + desc)
+            if (searchQuery) {
+              const q = searchQuery.toLowerCase();
+              filtered = filtered.filter(
+                (g) =>
+                  g.title.toLowerCase().includes(q) ||
+                  (g.desc && g.desc.toLowerCase().includes(q)) ||
+                  (g.category && g.category.toLowerCase().includes(q))
+              );
+            }
+
+            // Sort
+            if (currentSort === "latest") {
+              filtered.sort(
+                (a, b) => new Date(b.date || 0) - new Date(a.date || 0)
+              );
+            } else if (currentSort === "popular") {
+              filtered.sort((a, b) => (b.plays || 0) - (a.plays || 0));
+            }
+
+            return filtered;
+          }
+
+          function renderList(gamesToRender) {
             main.innerHTML = "";
-            filteredGames.forEach((g) => {
+            if (gamesToRender.length === 0) {
+              main.innerHTML = `
+                <div class="col-span-full text-center py-20">
+                  <p class="text-gray-500 text-lg">No games found</p>
+                  <p class="text-gray-600 text-sm mt-2">Try a different search or category</p>
+                </div>
+              `;
+              return;
+            }
+            gamesToRender.forEach((g) => {
               const card = document.createElement("div");
               card.className =
                 "flex flex-col bg-gray-900 neon-border shadow-lg transition transform hover:-translate-y-1";
               card.innerHTML = `
-            <img src="${g.thumb}" alt="${g.title}" class="h-40 w-full object-cover">
+            <a href="${g.url}">
+              <img src="${g.thumb}" alt="${g.title}" class="h-40 w-full object-cover">
+            </a>
             <div class="p-4 flex-1 flex flex-col">
-              <h2 class="font-bold text-lg mb-2 neon-text">${g.title}</h2>
+              <div class="flex items-center justify-between mb-2">
+                <h2 class="font-bold text-lg neon-text">${g.title}</h2>
+                ${g.category ? `<span class="text-[10px] uppercase tracking-wider px-2 py-0.5 border border-cyan-800 text-cyan-400 rounded-full">${g.category}</span>` : ""}
+              </div>
               <p class="text-gray-300 text-sm flex-1">${g.desc}</p>
               <a href="${g.url}" class="mt-3 py-2 text-center rounded-md glow-button font-bold">
                 Play Now
@@ -235,14 +398,63 @@
             });
           }
 
-          renderList(games);
+          // Initial render
+          renderList(getFilteredSortedGames());
 
-          // 搜索功能
+          // Search: match title + desc (real-time + button + enter)
           searchInput.addEventListener("input", () => {
-            const query = searchInput.value.toLowerCase();
-            renderList(
-              games.filter((g) => g.title.toLowerCase().includes(query)),
-            );
+            searchQuery = searchInput.value.trim();
+            renderList(getFilteredSortedGames());
+          });
+          searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              searchQuery = searchInput.value.trim();
+              renderList(getFilteredSortedGames());
+            }
+          });
+          document.getElementById("searchBtn").addEventListener("click", () => {
+            searchQuery = searchInput.value.trim();
+            renderList(getFilteredSortedGames());
+          });
+
+          // Sort buttons (Latest / Popular)
+          document.querySelectorAll(".sort-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              document.querySelectorAll(".sort-btn").forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              currentSort = btn.dataset.sort;
+              renderList(getFilteredSortedGames());
+            });
+          });
+
+          // Filter buttons (All / Reaction / Puzzle / ...)
+          document.querySelectorAll(".filter-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              currentFilter = btn.dataset.filter;
+              renderList(getFilteredSortedGames());
+            });
+          });
+
+          // Dynamically generate filter buttons from available categories
+          const categories = [...new Set(games.map((g) => g.category).filter(Boolean))].sort();
+          const filterContainer = document.querySelector(".filter-btn").parentElement;
+          categories.forEach((cat) => {
+            const exists = filterContainer.querySelector(`[data-filter="${cat}"]`);
+            if (!exists) {
+              const btn = document.createElement("button");
+              btn.className = "glow-button px-3 py-1 rounded-full text-sm filter-btn";
+              btn.dataset.filter = cat;
+              btn.textContent = cat;
+              filterContainer.appendChild(btn);
+              btn.addEventListener("click", () => {
+                document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentFilter = cat;
+                renderList(getFilteredSortedGames());
+              });
+            }
           });
         });
     </script>
