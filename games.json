@@ -1,37 +1,19 @@
 [
   {
-    "title": "Neon Reflex",
-    "url": "/games/neon-reflex/",
-    "thumb": "/games/neon-reflex/thumb.svg",
-    "desc": "⚡ Cyberpunk reaction challenge! Tap glowing targets before they fade. Chain combos for massive points!",
-    "category": "Reaction",
-    "date": "2026-03-17",
-    "plays": 128
+    "title": "Neon Tetris",
+    "url": "/games/neon-tetris/",
+    "thumb": "/games/neon-tetris/thumb.svg",
+    "desc": "🧱 Classic block-stacking with a cyberpunk twist! Combo chains, energy power-ups, daily challenges, and achievements.",
+    "category": "Puzzle",
+    "date": "2026-03-18",
+    "plays": 0
   },
   {
-    "title": "Neon Merge",
-    "url": "/games/neon-merge/",
-    "thumb": "/games/neon-merge/thumb.svg",
-    "desc": "🔮 Drop neon orbs and merge matching colors to evolve them into powerful cores! How high can you evolve?",
+    "title": "Neon Memory",
+    "url": "/games/neon-memory/",
+    "thumb": "/games/neon-memory/thumb.svg",
+    "desc": "🧠 Flip cards and find matching pairs! Test your memory with cyberpunk neon style. Multiple difficulty levels and time trial mode.",
     "category": "Casual",
-    "date": "2026-03-17",
-    "plays": 89
-  },
-  {
-    "title": "Hack Runner",
-    "url": "/games/hack-runner/",
-    "thumb": "/games/hack-runner/thumb.svg",
-    "desc": "🏃 Sprint through the neon data stream! Dodge obstacles, collect energy, survive as long as you can.",
-    "category": "Action",
-    "date": "2026-03-17",
-    "plays": 156
-  },
-  {
-    "title": "Neon Harvester",
-    "url": "/games/neon-harvester/",
-    "thumb": "/games/neon-harvester/thumb.svg",
-    "desc": "🌐 Click to harvest data fragments in the cyber darknet! Build automated facilities, unlock achievements, and dominate the network.",
-    "category": "Idle",
     "date": "2026-03-17",
     "plays": 0
   },
@@ -45,12 +27,39 @@
     "plays": 0
   },
   {
-    "title": "Neon Memory",
-    "url": "/games/neon-memory/",
-    "thumb": "/games/neon-memory/thumb.svg",
-    "desc": "🧠 Flip cards and find matching pairs! Test your memory with cyberpunk neon style. Multiple difficulty levels and time trial mode.",
-    "category": "Casual",
+    "title": "Neon Harvester",
+    "url": "/games/neon-harvester/",
+    "thumb": "/games/neon-harvester/thumb.svg",
+    "desc": "🌐 Click to harvest data fragments in the cyber darknet! Build automated facilities, unlock achievements, and dominate the network.",
+    "category": "Idle",
     "date": "2026-03-17",
     "plays": 0
+  },
+  {
+    "title": "Hack Runner",
+    "url": "/games/hack-runner/",
+    "thumb": "/games/hack-runner/thumb.svg",
+    "desc": "🏃 Sprint through the neon data stream! Dodge obstacles, collect energy, survive as long as you can.",
+    "category": "Action",
+    "date": "2026-03-17",
+    "plays": 156
+  },
+  {
+    "title": "Neon Merge",
+    "url": "/games/neon-merge/",
+    "thumb": "/games/neon-merge/thumb.svg",
+    "desc": "🔮 Drop neon orbs and merge matching colors to evolve them into powerful cores! How high can you evolve?",
+    "category": "Casual",
+    "date": "2026-03-17",
+    "plays": 89
+  },
+  {
+    "title": "Neon Reflex",
+    "url": "/games/neon-reflex/",
+    "thumb": "/games/neon-reflex/thumb.svg",
+    "desc": "⚡ Cyberpunk reaction challenge! Tap glowing targets before they fade. Chain combos for massive points!",
+    "category": "Reaction",
+    "date": "2026-03-17",
+    "plays": 128
   }
 ]

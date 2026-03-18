@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Tetris - Cyberpunk Block Puzzle Game | PlayPixelCraft</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <meta name="description" content="Neon Tetris - A cyberpunk-themed Tetris block puzzle game by PlayPixelCraft. Classic tetris gameplay with neon visuals, combos, power-ups, daily challenges, and achievements. Free, no download required.">
+    <meta name="keywords" content="tetris, block puzzle, tetris game, free online game, browser game, HTML5, neon, cyberpunk, free tetris, PlayPixelCraft, puzzle game">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://playpixelcraft.com/games/neon-tetris/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Neon Tetris - Cyberpunk Block Puzzle Game">
+    <meta property="og:description" content="Classic Tetris meets cyberpunk neon aesthetics. Clear lines, build combos, unlock power-ups, and compete in daily challenges.">
+    <meta property="og:url" content="https://playpixelcraft.com/games/neon-tetris/">
+    <meta property="og:image" content="https://playpixelcraft.com/games/neon-tetris/thumb.svg">
+    <meta property="og:site_name" content="PlayPixelCraft">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Tetris - Cyberpunk Block Puzzle Game">
+    <meta name="twitter:description" content="Classic Tetris with neon cyberpunk visuals, combos, power-ups, and daily challenges. Free to play.">
+    <meta name="twitter:image" content="https://playpixelcraft.com/games/neon-tetris/thumb.svg">
+
+    <!-- JSON-LD: VideoGame -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Neon Tetris",
+      "description": "A cyberpunk-themed Tetris block puzzle game with neon visuals, combo system, power-ups, daily challenges, and achievements.",
+      "url": "https://playpixelcraft.com/games/neon-tetris/",
+      "image": "https://playpixelcraft.com/games/neon-tetris/thumb.svg",
+      "genre": ["Puzzle Game", "Tetris", "Block Puzzle"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "playMode": ["SinglePlayer"],
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "value": 1,
+        "minValue": 1,
+        "maxValue": 1
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "PlayPixelCraft",
+        "url": "https://playpixelcraft.com/"
+      },
+      "datePublished": "2026-03-18",
+      "inLanguage": "en-US"
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#0A0A1A',
+                            core: '#00FFFF',
+                            energy: '#FF00FF',
+                            reward: '#FFEE00',
+                            facility: '#00FF88',
+                            rare: '#AA44FF',
+                            danger: '#FF0040',
+                            blue: '#4488FF',
+                            orange: '#FF8800'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0A0A1A;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        @media (max-width: 1023px) {
+            body { overflow-y: auto; overflow-x: hidden; }
+        }
+
+        /* Neon glow effects */
+        .neon-core { color: #00FFFF; text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF; }
+        .neon-energy { color: #FF00FF; text-shadow: 0 0 5px #FF00FF, 0 0 10px #FF00FF; }
+        .neon-reward { color: #FFEE00; text-shadow: 0 0 5px #FFEE00, 0 0 10px #FFEE00; }
+        .neon-facility { color: #00FF88; text-shadow: 0 0 5px #00FF88, 0 0 10px #00FF88; }
+        .neon-rare { color: #AA44FF; text-shadow: 0 0 5px #AA44FF, 0 0 10px #AA44FF; }
+        .neon-danger { color: #FF0040; text-shadow: 0 0 5px #FF0040, 0 0 10px #FF0040; }
+
+        /* Glass morphism */
+        .glass {
+            background: rgba(17, 17, 24, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        /* Scan lines */
+        .scanlines::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.015) 2px,
+                rgba(0, 255, 255, 0.015) 4px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Grid background */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Pulse animation */
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0,255,255,0.4), 0 0 20px rgba(0,255,255,0.2); }
+            50% { box-shadow: 0 0 20px rgba(0,255,255,0.6), 0 0 40px rgba(0,255,255,0.4); }
+        }
+        .pulse-cyan { animation: neonPulse 2s ease-in-out infinite; }
+
+        /* Number pop */
+        @keyframes numberPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .number-pop { animation: numberPop 0.2s ease-out; }
+
+        /* Achievement flash */
+        @keyframes achievementFlash {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(255, 238, 0, 0.15); }
+        }
+        .achievement-flash { animation: achievementFlash 0.5s ease-out; }
+
+        /* Combo text effect */
+        @keyframes comboSlam {
+            0% { transform: scale(2.5); opacity: 0; }
+            30% { transform: scale(1); opacity: 1; }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0; }
+        }
+        .combo-slam {
+            animation: comboSlam 1.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Power-up notification */
+        @keyframes powerUpNotify {
+            0% { transform: translateY(30px) scale(0.5); opacity: 0; }
+            20% { transform: translateY(0) scale(1.1); opacity: 1; }
+            80% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-20px); opacity: 0; }
+        }
+        .powerup-notify {
+            animation: powerUpNotify 2.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Line clear flash */
+        @keyframes lineFlash {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        .energy-fill {
+            background: linear-gradient(90deg, #FF00FF, #FFEE00);
+        }
+
+        /* Canvas styling */
+        #gameCanvas {
+            image-rendering: pixelated;
+        }
+
+        /* Virtual buttons */
+        .vbtn {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            transition: all 0.1s;
+            border: 2px solid rgba(0, 255, 255, 0.4);
+            background: rgba(0, 255, 255, 0.08);
+            color: #00FFFF;
+            cursor: pointer;
+        }
+        .vbtn:active {
+            background: rgba(0, 255, 255, 0.25);
+            transform: scale(0.92);
+        }
+        .vbtn-wide {
+            width: 90px;
+        }
+
+        /* Responsive layout */
+        @media (min-width: 1024px) {
+            .game-layout {
+                display: grid;
+                grid-template-columns: 260px auto 260px;
+                gap: 20px;
+                height: calc(100vh - 60px);
+                padding-top: 10px;
+            }
+            .mobile-only { display: none !important; }
+        }
+        @media (max-width: 1023px) {
+            .game-layout {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 70px 8px 200px;
+                gap: 8px;
+            }
+            .desktop-only { display: none !important; }
+        }
+        @media (max-width: 380px) {
+            .game-layout { padding: 60px 4px 180px; }
+        }
+
+        /* Mobile bottom controls */
+        .mobile-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 10px 16px 20px;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        /* Game over overlay */
+        .game-over-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Start screen */
+        .start-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Pause overlay */
+        .pause-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Data rain background */
+        .data-rain {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.15;
+        }
+
+        /* Mobile top HUD */
+        .mobile-hud {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 90;
+            padding: 6px 10px;
+            background: rgba(10, 10, 26, 0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+        }
+
+        /* Achievement tooltip */
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .slide-in-right {
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        /* Ghost mode visual */
+        @keyframes ghostShimmer {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="grid-bg scanlines">
+    <!-- Data rain canvas -->
+    <canvas id="rainCanvas" class="data-rain"></canvas>
+
+    <!-- Mobile HUD -->
+    <div class="mobile-hud mobile-only">
+        <div class="flex justify-between items-center gap-2 max-w-md mx-auto">
+            <div class="text-center">
+                <div class="text-[10px] text-cyber-core opacity-60">SCORE</div>
+                <div id="mScore" class="text-sm neon-core font-bold">0</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[10px] text-cyber-facility opacity-60">LEVEL</div>
+                <div id="mLevel" class="text-sm neon-facility font-bold">1</div>
+            </div>
+            <div class="text-center">
+                <div class="text-[10px] text-cyber-rare opacity-60">LINES</div>
+                <div id="mLines" class="text-sm neon-rare font-bold">0</div>
+            </div>
+            <div class="text-center flex-1 max-w-[100px]">
+                <div class="text-[10px] text-cyber-energy opacity-60">ENERGY</div>
+                <div class="progress-bar h-3 mt-1">
+                    <div id="mEnergyBar" class="progress-fill energy-fill" style="width:0%"></div>
+                </div>
+            </div>
+            <button id="mPauseBtn" class="text-cyber-reward text-lg px-2">⏸</button>
+        </div>
+    </div>
+
+    <!-- Start screen -->
+    <div id="startScreen" class="start-overlay">
+        <div class="text-center px-6">
+            <h1 class="text-4xl md:text-6xl font-bold mb-2 neon-core">NEON TETRIS</h1>
+            <p class="text-cyber-energy text-sm mb-8 opacity-70">CYBERPUNK BLOCK PUZZLE</p>
+            <div class="flex flex-col gap-3 items-center">
+                <button id="btnNormal" class="glass px-8 py-3 rounded-lg text-cyber-core font-bold text-lg pulse-cyan hover:bg-cyber-core hover:text-black transition cursor-pointer">▶ PLAY</button>
+                <button id="btnDaily" class="glass px-8 py-3 rounded-lg text-cyber-reward font-bold text-sm hover:bg-cyber-reward hover:text-black transition cursor-pointer">📅 DAILY CHALLENGE</button>
+                <button id="btnStats" class="glass px-6 py-2 rounded-lg text-gray-400 text-xs hover:text-white transition cursor-pointer">📊 STATISTICS</button>
+            </div>
+            <p class="text-gray-600 text-xs mt-8">← → Move · ↑ Rotate · ↓ Soft Drop · Space Hard Drop · P Pause</p>
+        </div>
+    </div>
+
+    <!-- Pause overlay -->
+    <div id="pauseOverlay" class="pause-overlay" style="display:none;">
+        <div class="text-center">
+            <h2 class="text-3xl neon-core mb-6">PAUSED</h2>
+            <button id="btnResume" class="glass px-8 py-3 rounded-lg text-cyber-core font-bold pulse-cyan hover:bg-cyber-core hover:text-black transition cursor-pointer">▶ RESUME</button>
+        </div>
+    </div>
+
+    <!-- Game over overlay -->
+    <div id="gameOverOverlay" class="game-over-overlay" style="display:none;">
+        <div class="glass rounded-xl p-6 max-w-sm w-full mx-4 text-center">
+            <h2 class="text-2xl neon-danger mb-4 font-bold">GAME OVER</h2>
+            <div id="goStats" class="space-y-2 mb-4 text-sm"></div>
+            <div id="goNewAchievements" class="mb-4 hidden">
+                <div class="text-xs text-cyber-reward mb-2">NEW ACHIEVEMENTS</div>
+                <div id="goAchievementList" class="space-y-1"></div>
+            </div>
+            <div id="goDailySection" class="mb-4 hidden">
+                <div class="text-xs text-cyber-energy mb-2">DAILY CHALLENGE</div>
+                <div id="goDailyInfo" class="text-sm text-gray-300 mb-2"></div>
+                <button id="btnShare" class="glass px-4 py-2 rounded text-cyber-core text-xs hover:bg-cyber-core hover:text-black transition cursor-pointer">📋 Copy Score</button>
+            </div>
+            <div class="flex gap-3 justify-center mt-4">
+                <button id="btnRestart" class="glass px-6 py-3 rounded-lg text-cyber-core font-bold pulse-cyan hover:bg-cyber-core hover:text-black transition cursor-pointer">↻ RETRY</button>
+                <button id="btnMenu" class="glass px-6 py-3 rounded-lg text-gray-400 hover:text-white transition cursor-pointer">MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats modal -->
+    <div id="statsOverlay" class="game-over-overlay" style="display:none;">
+        <div class="glass rounded-xl p-6 max-w-sm w-full mx-4 text-center">
+            <h2 class="text-2xl neon-core mb-4 font-bold">📊 STATISTICS</h2>
+            <div id="statsContent" class="space-y-2 text-sm mb-4"></div>
+            <button id="btnCloseStats" class="glass px-6 py-2 rounded-lg text-gray-400 hover:text-white transition cursor-pointer">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- Combo display (floating on game canvas) -->
+    <div id="comboDisplay" class="fixed z-[150] pointer-events-none hidden" style="left:50%;top:35%;transform:translate(-50%,-50%);"></div>
+
+    <!-- Power-up notification -->
+    <div id="powerUpNotif" class="fixed z-[150] pointer-events-none hidden" style="left:50%;top:50%;transform:translate(-50%,-50%);"></div>
+
+    <!-- Achievement notification -->
+    <div id="achievementNotif" class="fixed top-4 right-4 z-[150] slide-in-right hidden">
+        <div class="glass rounded-lg px-4 py-3 border-cyber-reward">
+            <div class="text-xs text-cyber-reward font-bold">🏆 ACHIEVEMENT</div>
+            <div id="achNotifText" class="text-sm text-white"></div>
+        </div>
+    </div>
+
+    <!-- Active power-ups display -->
+    <div id="activePowerUps" class="fixed z-[150] pointer-events-none" style="left:50%;bottom:240px;transform:translateX(-50%);">
+    </div>
+
+    <!-- Main game area -->
+    <div class="game-layout">
+        <!-- Left panel: Stats -->
+        <div class="glass rounded-lg p-4 overflow-y-auto desktop-only" style="max-height: calc(100vh - 80px);">
+            <h2 class="text-sm neon-core mb-3 tracking-widest">GAME STATS</h2>
+            <div class="space-y-3">
+                <div>
+                    <div class="text-[10px] text-gray-500">SCORE</div>
+                    <div id="dScore" class="text-xl neon-core font-bold">0</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-500">LEVEL</div>
+                    <div id="dLevel" class="text-lg neon-facility font-bold">1</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-500">LINES</div>
+                    <div id="dLines" class="text-lg neon-rare font-bold">0</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-500">COMBO</div>
+                    <div id="dCombo" class="text-lg neon-energy font-bold">0</div>
+                </div>
+                <div>
+                    <div class="text-[10px] text-gray-500 mb-1">ENERGY</div>
+                    <div class="progress-bar h-3">
+                        <div id="dEnergyBar" class="progress-fill energy-fill" style="width:0%"></div>
+                    </div>
+                    <div id="dEnergyText" class="text-[10px] text-gray-500 mt-1">0 / 200</div>
+                </div>
+                <hr class="border-gray-800">
+                <div>
+                    <div class="text-[10px] text-gray-500">HIGH SCORE</div>
+                    <div id="dHighScore" class="text-sm text-gray-300">0</div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button id="dPauseBtn" class="w-full glass px-4 py-2 rounded text-cyber-reward text-sm hover:bg-cyber-reward hover:text-black transition cursor-pointer">⏸ PAUSE</button>
+            </div>
+        </div>
+
+        <!-- Center: Game Canvas -->
+        <div class="flex flex-col items-center justify-center relative">
+            <canvas id="gameCanvas" class="border-2" style="border-color: rgba(0,255,255,0.3); box-shadow: 0 0 15px rgba(0,255,255,0.15), inset 0 0 15px rgba(0,255,255,0.05);"></canvas>
+        </div>
+
+        <!-- Right panel: Next piece + Achievements -->
+        <div class="glass rounded-lg p-4 overflow-y-auto desktop-only" style="max-height: calc(100vh - 80px);">
+            <!-- Next piece -->
+            <div class="mb-4">
+                <div class="text-[10px] text-gray-500 mb-2 text-center">NEXT PIECE</div>
+                <div class="flex justify-center">
+                    <canvas id="nextCanvasDesktop" width="120" height="100"></canvas>
+                </div>
+            </div>
+            <hr class="border-gray-800 mb-4">
+            <div class="mb-4">
+                <h2 class="text-sm neon-core mb-2 tracking-widest">CONTROLS</h2>
+                <div class="space-y-1 text-xs text-gray-400">
+                    <div class="flex justify-between"><span>← →</span><span>Move</span></div>
+                    <div class="flex justify-between"><span>↑</span><span>Rotate</span></div>
+                    <div class="flex justify-between"><span>↓</span><span>Soft Drop</span></div>
+                    <div class="flex justify-between"><span>Space</span><span>Hard Drop</span></div>
+                    <div class="flex justify-between"><span>P</span><span>Pause</span></div>
+                </div>
+            </div>
+            <hr class="border-gray-800 mb-4">
+            <h2 class="text-sm neon-reward mb-3 tracking-widest">ACHIEVEMENTS</h2>
+            <div id="achievementsList" class="space-y-2 text-xs">
+            </div>
+        </div>
+
+        <!-- Mobile: Next piece preview -->
+        <div class="mobile-only flex justify-center">
+            <div class="glass rounded-lg p-2">
+                <div class="text-[10px] text-gray-500 text-center">NEXT</div>
+                <canvas id="nextCanvasMobile" width="80" height="64"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile virtual controls -->
+    <div class="mobile-controls mobile-only">
+        <button class="vbtn" id="btnLeft">◀</button>
+        <button class="vbtn" id="btnDown">▼</button>
+        <button class="vbtn" id="btnRotate">↻</button>
+        <button class="vbtn vbtn-wide" id="btnDrop">⏬</button>
+        <button class="vbtn" id="btnRight">▶</button>
+    </div>
+
+    <script>
+    // ==================== CONFIGURATION ====================
+    const COLS = 10;
+    const ROWS = 20;
+    const BLOCK_SIZE = 28;
+
+    // Tetromino colors (neon)
+    const COLORS = {
+        I: '#00FFFF', O: '#FFEE00', T: '#AA44FF',
+        S: '#00FF88', Z: '#FF0040', J: '#4488FF', L: '#FF8800'
+    };
+
+    // Tetromino shapes (4 rotations each)
+    const SHAPES = {
+        I: [
+            [[0,0],[1,0],[2,0],[3,0]],
+            [[0,0],[0,1],[0,2],[0,3]],
+            [[0,0],[1,0],[2,0],[3,0]],
+            [[0,0],[0,1],[0,2],[0,3]]
+        ],
+        O: [
+            [[0,0],[1,0],[0,1],[1,1]],
+            [[0,0],[1,0],[0,1],[1,1]],
+            [[0,0],[1,0],[0,1],[1,1]],
+            [[0,0],[1,0],[0,1],[1,1]]
+        ],
+        T: [
+            [[0,0],[1,0],[2,0],[1,1]],
+            [[0,0],[0,1],[0,2],[1,1]],
+            [[1,0],[0,1],[1,1],[2,1]],
+            [[1,0],[1,1],[1,2],[0,1]]
+        ],
+        S: [
+            [[1,0],[2,0],[0,1],[1,1]],
+            [[0,0],[0,1],[1,1],[1,2]],
+            [[1,0],[2,0],[0,1],[1,1]],
+            [[0,0],[0,1],[1,1],[1,2]]
+        ],
+        Z: [
+            [[0,0],[1,0],[1,1],[2,1]],
+            [[1,0],[0,1],[1,1],[0,2]],
+            [[0,0],[1,0],[1,1],[2,1]],
+            [[1,0],[0,1],[1,1],[0,2]]
+        ],
+        J: [
+            [[0,0],[0,1],[1,1],[2,1]],
+            [[0,0],[1,0],[0,1],[0,2]],
+            [[0,0],[1,0],[2,0],[2,1]],
+            [[1,0],[1,1],[0,2],[1,2]]
+        ],
+        L: [
+            [[2,0],[0,1],[1,1],[2,1]],
+            [[0,0],[0,1],[0,2],[1,2]],
+            [[0,0],[1,0],[2,0],[0,1]],
+            [[0,0],[1,0],[1,1],[1,2]]
+        ]
+    };
+
+    const PIECE_TYPES = ['I','O','T','S','Z','J','L'];
+
+    // Scoring
+    const LINE_SCORES = [0, 100, 300, 500, 800];
+    const ENERGY_PER_LINE = [0, 10, 25, 50, 100];
+    const MAX_ENERGY = 200;
+
+    // Power-up definitions
+    const POWERUPS = [
+        { id: 'ghost', name: '⚡ Ghost Mode', desc: 'Pass through blocks!', duration: 5000, color: '#00FFFF' },
+        { id: 'burn', name: '🔥 Burn Row', desc: 'Bottom row burned!', duration: 0, color: '#FF0040' },
+        { id: 'slow', name: '⏳ Slow Motion', desc: 'Time slowed down!', duration: 8000, color: '#FFEE00' }
+    ];
+
+    // Achievement definitions
+    const ACHIEVEMENTS_DEF = [
+        { id: 'firstClear', name: 'First Clear', desc: 'Clear your first line', icon: '✨' },
+        { id: 'tetris', name: 'Tetris!', desc: 'Clear 4 lines at once', icon: '🔥' },
+        { id: 'combo5', name: 'Combo Master', desc: 'Achieve a 5-combo', icon: '⚡' },
+        { id: 'century', name: 'Century', desc: 'Clear 100 lines total', icon: '💯' },
+        { id: 'speed10', name: 'Speed Demon', desc: 'Reach level 10', icon: '🏎️' },
+        { id: 'score5k', name: 'Score Hunter', desc: 'Score 5,000 in one game', icon: '🎯' },
+        { id: 'legend', name: 'Legendary', desc: 'Score 10,000 in one game', icon: '👑' },
+        { id: 'daily3', name: 'Daily Player', desc: 'Complete 3 daily challenges', icon: '📅' },
+        { id: 'dedicated', name: 'Dedicated', desc: 'Play for over 1 hour total', icon: '⏰' },
+        { id: 'marathon', name: 'Marathon', desc: 'Play over 15 min in one game', icon: '🏃' }
+    ];
+
+    // ==================== GAME STATE ====================
+    let board = [];
+    let currentPiece = null;
+    let nextPieceType = null;
+    let score = 0;
+    let level = 1;
+    let lines = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let energy = 0;
+    let gameRunning = false;
+    let gamePaused = false;
+    let isDailyMode = false;
+    let gameStartTime = 0;
+    let sessionLines = 0;
+    let dropTimer = 0;
+    let lastTime = 0;
+    let animFrame = null;
+
+    // Power-up state
+    let activePowerUp = null; // { id, endTime, startTime }
+    let ghostMode = false;
+    let slowMode = false;
+
+    // Piece bag for random generation
+    let pieceBag = [];
+    let dailySeed = 0;
+    let rngState = 0;
+
+    // Visual effects
+    let particles = [];
+    let lineFlashes = [];
+    let comboDisplayTimer = 0;
+    let powerUpNotifTimer = 0;
+    let landingGlow = null;
+
+    // Session new achievements
+    let sessionNewAchievements = [];
+
+    // Data rain
+    let rainDrops = [];
+
+    // Touch handling
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    // ==================== PERSISTENT STATE (localStorage) ====================
+    function loadPersistentState() {
+        const saved = localStorage.getItem('neonTetrisStats');
+        if (saved) return JSON.parse(saved);
+        return {
+            highScore: 0,
+            totalGames: 0,
+            totalLines: 0,
+            bestCombo: 0,
+            totalTime: 0, // seconds
+            bestLevel: 0,
+            achievements: [],
+            dailyCompleted: 0,
+            dailyScores: {} // { 'YYYYMMDD': score }
+        };
+    }
+
+    function savePersistentState() {
+        localStorage.setItem('neonTetrisStats', JSON.stringify(persistentState));
+    }
+
+    let persistentState = loadPersistentState();
+
+    // ==================== CANVAS SETUP ====================
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+    const rainCanvas = document.getElementById('rainCanvas');
+    const rainCtx = rainCanvas.getContext('2d');
+
+    function resizeCanvases() {
+        rainCanvas.width = window.innerWidth;
+        rainCanvas.height = window.innerHeight;
+        resizeGameCanvas();
+    }
+
+    function resizeGameCanvas() {
+        const container = gameCanvas.parentElement;
+        const maxW = Math.min(window.innerWidth - 20, 400);
+        const maxH = window.innerHeight - 250;
+        const cellSize = Math.floor(Math.min(maxW / COLS, maxH / ROWS));
+        const clampedCell = Math.max(16, Math.min(cellSize, 32));
+
+        gameCanvas.width = clampedCell * COLS;
+        gameCanvas.height = clampedCell * ROWS;
+        gameCanvas.style.width = gameCanvas.width + 'px';
+        gameCanvas.style.height = gameCanvas.height + 'px';
+    }
+
+    // ==================== BOARD LOGIC ====================
+    function createBoard() {
+        board = [];
+        for (let r = 0; r < ROWS; r++) {
+            board.push(new Array(COLS).fill(null));
+        }
+    }
+
+    function getShape(type, rotation) {
+        return SHAPES[type][rotation % SHAPES[type].length];
+    }
+
+    function getColor(type) {
+        return COLORS[type];
+    }
+
+    // Seeded random for daily challenge
+    function seededRandom() {
+        rngState = (rngState * 1664525 + 1013904223) & 0xFFFFFFFF;
+        return (rngState >>> 0) / 0xFFFFFFFF;
+    }
+
+    function dateToSeed(dateStr) {
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+            hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+
+    function getNextPieceType() {
+        if (isDailyMode) {
+            const idx = Math.floor(seededRandom() * PIECE_TYPES.length);
+            return PIECE_TYPES[idx];
+        }
+        // 7-bag randomizer
+        if (pieceBag.length === 0) {
+            pieceBag = [...PIECE_TYPES];
+            for (let i = pieceBag.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pieceBag[i], pieceBag[j]] = [pieceBag[j], pieceBag[i]];
+            }
+        }
+        return pieceBag.pop();
+    }
+
+    function createPiece(type) {
+        const shape = getShape(type, 0);
+        return {
+            type: type,
+            rotation: 0,
+            x: Math.floor(COLS / 2) - 1,
+            y: 0,
+            shape: shape
+        };
+    }
+
+    function isValidPosition(shape, posX, posY) {
+        for (const [cx, cy] of shape) {
+            const nx = posX + cx;
+            const ny = posY + cy;
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
+            if (ny >= 0 && board[ny][nx] !== null) {
+                if (!ghostMode) return false;
+            }
+        }
+        return true;
+    }
+
+    function lockPiece(piece) {
+        for (const [cx, cy] of piece.shape) {
+            const nx = piece.x + cx;
+            const ny = piece.y + cy;
+            if (ny >= 0 && ny < ROWS && nx >= 0 && nx < COLS) {
+                board[ny][nx] = piece.type;
+            }
+        }
+        // Landing glow effect
+        landingGlow = { x: piece.x, y: piece.y, time: Date.now(), color: getColor(piece.type) };
+        return clearLines();
+    }
+
+    function clearLines() {
+        let clearedRows = [];
+        for (let r = ROWS - 1; r >= 0; r--) {
+            if (board[r].every(cell => cell !== null)) {
+                clearedRows.push(r);
+            }
+        }
+
+        if (clearedRows.length === 0) {
+            // Combo broke
+            combo = 0;
+            updateHUD();
+            return;
+        }
+
+        // Combo continues
+        combo++;
+        sessionLines += clearedRows.length;
+        if (combo > maxCombo) maxCombo = combo;
+
+        // Line flash effect
+        clearedRows.forEach(r => {
+            lineFlashes.push({ row: r, time: Date.now() });
+            // Spawn particles for each cell
+            for (let c = 0; c < COLS; c++) {
+                const color = getColor(board[r][c]) || '#FFFFFF';
+                for (let p = 0; p < 4; p++) {
+                    const cellSize = gameCanvas.width / COLS;
+                    particles.push({
+                        x: c * cellSize + cellSize / 2,
+                        y: r * cellSize + cellSize / 2,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 6 - 2,
+                        life: 1,
+                        color: color,
+                        size: 3 + Math.random() * 3
+                    });
+                }
+            }
+        });
+
+        // Remove cleared rows immediately (visual flash handled by lineFlashes)
+        clearedRows.sort((a, b) => a - b);
+        for (const row of clearedRows.reverse()) {
+            board.splice(row, 1);
+            board.unshift(new Array(COLS).fill(null));
+        }
+
+        // Scoring
+        let lineScore = LINE_SCORES[Math.min(clearedRows.length, 4)] * level;
+
+        // Combo multiplier
+        let comboMultiplier = 1;
+        if (combo >= 4) comboMultiplier = 3;
+        else if (combo >= 3) comboMultiplier = 2;
+        else if (combo >= 2) comboMultiplier = 1.5;
+
+        lineScore = Math.floor(lineScore * comboMultiplier);
+        score += lineScore;
+        lines += clearedRows.length;
+
+        // Energy
+        energy += ENERGY_PER_LINE[Math.min(clearedRows.length, 4)];
+
+        // Check power-up
+        if (energy >= MAX_ENERGY) {
+            energy -= MAX_ENERGY;
+            activateRandomPowerUp();
+        }
+
+        // Level up
+        const newLevel = Math.floor(lines / 10) + 1;
+        if (newLevel > level) {
+            level = newLevel;
+        }
+
+        // Show combo if >= 2
+        if (combo >= 2) {
+            showComboDisplay(combo, comboMultiplier);
+        }
+
+        // Check achievements
+        if (clearedRows.length >= 1) unlockAchievement('firstClear');
+        if (clearedRows.length >= 4) unlockAchievement('tetris');
+        if (combo >= 5) unlockAchievement('combo5');
+        if (level >= 10) unlockAchievement('speed10');
+        if (score >= 5000) unlockAchievement('score5k');
+        if (score >= 10000) unlockAchievement('legend');
+
+        updateHUD();
+    }
+
+    // ==================== GHOST PIECE ====================
+    function getGhostY(piece) {
+        let gy = piece.y;
+        while (isValidPosition(piece.shape, piece.x, gy + 1)) {
+            gy++;
+        }
+        return gy;
+    }
+
+    // ==================== MOVEMENT ====================
+    function moveLeft() {
+        if (!gameRunning || gamePaused) return;
+        if (isValidPosition(currentPiece.shape, currentPiece.x - 1, currentPiece.y)) {
+            currentPiece.x--;
+        }
+    }
+
+    function moveRight() {
+        if (!gameRunning || gamePaused) return;
+        if (isValidPosition(currentPiece.shape, currentPiece.x + 1, currentPiece.y)) {
+            currentPiece.x++;
+        }
+    }
+
+    function rotatePiece() {
+        if (!gameRunning || gamePaused) return;
+        const newRot = (currentPiece.rotation + 1) % 4;
+        const newShape = getShape(currentPiece.type, newRot);
+
+        // Try basic rotation
+        if (isValidPosition(newShape, currentPiece.x, currentPiece.y)) {
+            currentPiece.rotation = newRot;
+            currentPiece.shape = newShape;
+            return;
+        }
+
+        // Wall kicks (simplified SRS)
+        const kicks = [[-1,0],[1,0],[0,-1],[-1,-1],[1,-1],[2,0],[-2,0]];
+        for (const [kx, ky] of kicks) {
+            if (isValidPosition(newShape, currentPiece.x + kx, currentPiece.y + ky)) {
+                currentPiece.x += kx;
+                currentPiece.y += ky;
+                currentPiece.rotation = newRot;
+                currentPiece.shape = newShape;
+                return;
+            }
+        }
+    }
+
+    function softDrop() {
+        if (!gameRunning || gamePaused) return;
+        if (isValidPosition(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+            currentPiece.y++;
+            score += 1;
+            dropTimer = 0;
+        }
+    }
+
+    function hardDrop() {
+        if (!gameRunning || gamePaused) return;
+        let dropped = 0;
+        while (isValidPosition(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+            currentPiece.y++;
+            dropped++;
+        }
+        score += dropped * 2;
+        dropTimer = 0;
+        lastTime = 0;
+        updateHUD();
+        spawnNextPiece();
+    }
+
+    // ==================== GAME FLOW ====================
+    function spawnNextPiece() {
+        const cleared = lockPiece(currentPiece);
+        currentPiece = createPiece(nextPieceType);
+        nextPieceType = getNextPieceType();
+        drawNextPiece();
+        dropTimer = 0;
+        lastTime = 0;
+
+        if (!isValidPosition(currentPiece.shape, currentPiece.x, currentPiece.y)) {
+            gameOver();
+        }
+
+        updateHUD();
+    }
+
+    function getDropSpeed() {
+        let speed = 800 - (level - 1) * 50;
+        if (speed < 100) speed = 100;
+        if (slowMode) speed *= 2.5;
+        return speed;
+    }
+
+    function update(timestamp) {
+        if (!gameRunning || gamePaused) return;
+
+        if (!lastTime) lastTime = timestamp;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        dropTimer += delta;
+        if (dropTimer >= getDropSpeed()) {
+            dropTimer = 0;
+            if (currentPiece && isValidPosition(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+                currentPiece.y++;
+            } else {
+                spawnNextPiece();
+            }
+        }
+
+        // Check power-up timers
+        if (activePowerUp && activePowerUp.endTime > 0) {
+            if (Date.now() >= activePowerUp.endTime) {
+                deactivatePowerUp();
+            }
+        }
+
+        render();
+        updateRain();
+        animFrame = requestAnimationFrame(update);
+    }
+
+    // ==================== POWER-UPS ====================
+    function activateRandomPowerUp() {
+        const pu = POWERUPS[Math.floor(Math.random() * POWERUPS.length)];
+        const now = Date.now();
+
+        if (pu.id === 'burn') {
+            // Burn bottom row
+            if (board[ROWS - 1].some(cell => cell !== null)) {
+                for (let c = 0; c < COLS; c++) {
+                    const color = getColor(board[ROWS - 1][c]) || '#FF0040';
+                    const cellSize = gameCanvas.width / COLS;
+                    for (let p = 0; p < 3; p++) {
+                        particles.push({
+                            x: c * cellSize + cellSize / 2,
+                            y: (ROWS - 1) * cellSize + cellSize / 2,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: -Math.random() * 4 - 1,
+                            life: 1,
+                            color: color,
+                            size: 3 + Math.random() * 2
+                        });
+                    }
+                }
+                board[ROWS - 1] = new Array(COLS).fill(null);
+            }
+        }
+
+        activePowerUp = {
+            id: pu.id,
+            name: pu.name,
+            color: pu.color,
+            startTime: now,
+            endTime: pu.duration > 0 ? now + pu.duration : now + 2000
+        };
+
+        if (pu.id === 'ghost') ghostMode = true;
+        if (pu.id === 'slow') slowMode = true;
+
+        showPowerUpNotification(pu.name, pu.color);
+        updateActivePowerUpsDisplay();
+    }
+
+    function deactivatePowerUp() {
+        if (!activePowerUp) return;
+        if (activePowerUp.id === 'ghost') ghostMode = false;
+        if (activePowerUp.id === 'slow') slowMode = false;
+        activePowerUp = null;
+        updateActivePowerUpsDisplay();
+    }
+
+    function updateActivePowerUpsDisplay() {
+        const container = document.getElementById('activePowerUps');
+        if (!activePowerUp || (activePowerUp.endTime > 0 && Date.now() >= activePowerUp.endTime)) {
+            container.innerHTML = '';
+            return;
+        }
+        let remaining = '';
+        if (activePowerUp.endTime > 0) {
+            const secs = Math.ceil((activePowerUp.endTime - Date.now()) / 1000);
+            remaining = ` ${secs}s`;
+        }
+        container.innerHTML = `
+            <div class="glass rounded-lg px-3 py-1 text-xs font-bold" style="color:${activePowerUp.color};border-color:${activePowerUp.color}">
+                ${activePowerUp.name}${remaining}
+            </div>
+        `;
+    }
+
+    function showPowerUpNotification(name, color) {
+        const el = document.getElementById('powerUpNotif');
+        el.innerHTML = `<div class="powerup-notify text-center">
+            <div class="text-2xl font-bold" style="color:${color};text-shadow:0 0 20px ${color}">${name}</div>
+        </div>`;
+        el.classList.remove('hidden');
+        clearTimeout(powerUpNotifTimer);
+        powerUpNotifTimer = setTimeout(() => el.classList.add('hidden'), 2500);
+    }
+
+    // ==================== COMBO DISPLAY ====================
+    function showComboDisplay(count, multiplier) {
+        const el = document.getElementById('comboDisplay');
+        const multText = multiplier === 3 ? '×3 MAX!' : multiplier === 2 ? '×2' : '×1.5';
+        const size = Math.min(2 + count * 0.15, 3.5);
+        el.innerHTML = `
+            <div class="combo-slam text-center">
+                <div class="font-black" style="font-size:${size}rem;color:#FFEE00;text-shadow:0 0 20px #FFEE00,0 0 40px #FF00FF">${count} COMBO</div>
+                <div class="text-lg neon-energy">${multText}</div>
+            </div>
+        `;
+        el.classList.remove('hidden');
+        clearTimeout(comboDisplayTimer);
+        comboDisplayTimer = setTimeout(() => el.classList.add('hidden'), 1500);
+    }
+
+    // ==================== RENDERING ====================
+    function render() {
+        const ctx = gameCtx;
+        const cw = gameCanvas.width;
+        const ch = gameCanvas.height;
+        const cellW = cw / COLS;
+        const cellH = ch / ROWS;
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Dark background for game area
+        ctx.fillStyle = '#060612';
+        ctx.fillRect(0, 0, cw, ch);
+
+        // Draw background grid
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+        ctx.lineWidth = 0.5;
+        for (let c = 0; c <= COLS; c++) {
+            ctx.beginPath();
+            ctx.moveTo(c * cellW, 0);
+            ctx.lineTo(c * cellW, ch);
+            ctx.stroke();
+        }
+        for (let r = 0; r <= ROWS; r++) {
+            ctx.beginPath();
+            ctx.moveTo(0, r * cellH);
+            ctx.lineTo(cw, r * cellH);
+            ctx.stroke();
+        }
+
+        // Draw locked blocks
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (board[r][c]) {
+                    drawBlock(ctx, c * cellW, r * cellH, cellW, cellH, getColor(board[r][c]), false);
+                }
+            }
+        }
+
+        // Draw ghost piece
+        if (currentPiece) {
+            const ghostY = getGhostY(currentPiece);
+            if (ghostY !== currentPiece.y) {
+                for (const [cx, cy] of currentPiece.shape) {
+                    const gx = (currentPiece.x + cx) * cellW;
+                    const gy = (ghostY + cy) * cellH;
+                    ctx.strokeStyle = getColor(currentPiece.type);
+                    ctx.globalAlpha = 0.3;
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(gx + 1, gy + 1, cellW - 2, cellH - 2);
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // Draw current piece
+            for (const [cx, cy] of currentPiece.shape) {
+                const px = (currentPiece.x + cx) * cellW;
+                const py = (currentPiece.y + cy) * cellH;
+                if (currentPiece.y + cy >= 0) {
+                    const isGhost = ghostMode;
+                    drawBlock(ctx, px, py, cellW, cellH, getColor(currentPiece.type), isGhost);
+                }
+            }
+        }
+
+        // Draw line flashes
+        const now = Date.now();
+        lineFlashes = lineFlashes.filter(flash => {
+            const age = now - flash.time;
+            if (age > 400) return false;
+            const alpha = 0.8 * (1 - age / 400);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fillRect(0, flash.row * cellH, cw, cellH);
+            return true;
+        });
+
+        // Draw landing glow
+        if (landingGlow) {
+            const age = now - landingGlow.time;
+            if (age < 500) {
+                const alpha = 0.4 * (1 - age / 500);
+                const cellSize = cellW;
+                ctx.shadowColor = landingGlow.color;
+                ctx.shadowBlur = 20 * (1 - age / 500);
+                for (const [cx, cy] of currentPiece ? currentPiece.shape : []) {
+                    const px = (landingGlow.x + cx) * cellSize;
+                    const py = (landingGlow.y + cy) * cellSize;
+                    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+                    ctx.fillRect(px, py, cellSize, cellSize);
+                }
+                ctx.shadowBlur = 0;
+            } else {
+                landingGlow = null;
+            }
+        }
+
+        // Draw particles
+        particles = particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15;
+            p.life -= 0.02;
+            if (p.life <= 0) return false;
+
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.shadowColor = p.color;
+            ctx.shadowBlur = 5;
+            ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size * p.life, p.size * p.life);
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+            return true;
+        });
+
+        // Update active power-up display timer
+        if (activePowerUp && activePowerUp.endTime > 0) {
+            updateActivePowerUpsDisplay();
+        }
+    }
+
+    function drawBlock(ctx, x, y, w, h, color, isGhostPiece) {
+        const padding = 1;
+        const bx = x + padding;
+        const by = y + padding;
+        const bw = w - padding * 2;
+        const bh = h - padding * 2;
+
+        if (isGhostPiece) {
+            ctx.globalAlpha = 0.5;
+        }
+
+        // Block fill
+        ctx.fillStyle = color;
+        ctx.fillRect(bx, by, bw, bh);
+
+        // Inner highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fillRect(bx, by, bw, bh * 0.3);
+
+        // Border glow
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 6;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.shadowBlur = 0;
+
+        if (isGhostPiece) {
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // ==================== NEXT PIECE PREVIEW ====================
+    function drawNextPiece() {
+        // Desktop canvas
+        drawNextOnCanvas(document.getElementById('nextCanvasDesktop'), 120, 100);
+        // Mobile canvas
+        drawNextOnCanvas(document.getElementById('nextCanvasMobile'), 80, 64);
+    }
+
+    function drawNextOnCanvas(canvas, w, h) {
+        if (!canvas || !nextPieceType) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, w, h);
+
+        const shape = getShape(nextPieceType, 0);
+        const color = getColor(nextPieceType);
+
+        // Find bounds
+        let minX = 4, maxX = 0, minY = 4, maxY = 0;
+        for (const [cx, cy] of shape) {
+            minX = Math.min(minX, cx); maxX = Math.max(maxX, cx);
+            minY = Math.min(minY, cy); maxY = Math.max(maxY, cy);
+        }
+        const sw = maxX - minX + 1;
+        const sh = maxY - minY + 1;
+        const cellSize = Math.min(Math.floor((w - 10) / sw), Math.floor((h - 10) / sh), 24);
+        const offsetX = (w - sw * cellSize) / 2;
+        const offsetY = (h - sh * cellSize) / 2;
+
+        for (const [cx, cy] of shape) {
+            const px = offsetX + (cx - minX) * cellSize;
+            const py = offsetY + (cy - minY) * cellSize;
+            drawBlock(ctx, px, py, cellSize, cellSize, color, false);
+        }
+    }
+
+    // ==================== DATA RAIN ====================
+    function updateRain() {
+        rainCtx.fillStyle = 'rgba(10, 10, 26, 0.1)';
+        rainCtx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
+
+        if (Math.random() < 0.3) {
+            rainDrops.push({
+                x: Math.random() * rainCanvas.width,
+                y: -10,
+                speed: 2 + Math.random() * 4,
+                char: String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96))
+            });
+        }
+
+        rainCtx.fillStyle = '#00FFFF';
+        rainCtx.font = '12px monospace';
+
+        rainDrops = rainDrops.filter(drop => {
+            drop.y += drop.speed;
+            rainCtx.fillText(drop.char, drop.x, drop.y);
+            return drop.y < rainCanvas.height;
+        });
+
+        // Limit drops
+        if (rainDrops.length > 100) rainDrops = rainDrops.slice(-80);
+    }
+
+    // ==================== HUD ====================
+    function updateHUD() {
+        // Desktop
+        const dScore = document.getElementById('dScore');
+        const dLevel = document.getElementById('dLevel');
+        const dLines = document.getElementById('dLines');
+        const dCombo = document.getElementById('dCombo');
+        const dEnergyBar = document.getElementById('dEnergyBar');
+        const dEnergyText = document.getElementById('dEnergyText');
+        const dHighScore = document.getElementById('dHighScore');
+
+        if (dScore) dScore.textContent = score.toLocaleString();
+        if (dLevel) dLevel.textContent = level;
+        if (dLines) dLines.textContent = lines;
+        if (dCombo) dCombo.textContent = combo > 0 ? combo + 'x' : '—';
+        if (dEnergyBar) dEnergyBar.style.width = (energy / MAX_ENERGY * 100) + '%';
+        if (dEnergyText) dEnergyText.textContent = `${energy} / ${MAX_ENERGY}`;
+        if (dHighScore) dHighScore.textContent = persistentState.highScore.toLocaleString();
+
+        // Mobile
+        const mScore = document.getElementById('mScore');
+        const mLevel = document.getElementById('mLevel');
+        const mLines = document.getElementById('mLines');
+        const mEnergyBar = document.getElementById('mEnergyBar');
+
+        if (mScore) mScore.textContent = score.toLocaleString();
+        if (mLevel) mLevel.textContent = level;
+        if (mLines) mLines.textContent = lines;
+        if (mEnergyBar) mEnergyBar.style.width = (energy / MAX_ENERGY * 100) + '%';
+    }
+
+    // ==================== ACHIEVEMENTS ====================
+    function unlockAchievement(id) {
+        if (persistentState.achievements.includes(id)) return;
+        persistentState.achievements.push(id);
+        savePersistentState();
+
+        const ach = ACHIEVEMENTS_DEF.find(a => a.id === id);
+        if (ach) {
+            sessionNewAchievements.push(ach);
+            showAchievementNotification(ach);
+        }
+
+        // Special achievements that need global stats
+        if (id === 'century' && persistentState.totalLines >= 100) {
+            unlockAchievement('century');
+        }
+        if (id === 'daily3' && persistentState.dailyCompleted >= 3) {
+            unlockAchievement('daily3');
+        }
+        if (id === 'dedicated' && persistentState.totalTime >= 3600) {
+            unlockAchievement('dedicated');
+        }
+    }
+
+    function showAchievementNotification(ach) {
+        const el = document.getElementById('achievementNotif');
+        document.getElementById('achNotifText').textContent = `${ach.icon} ${ach.name}`;
+        el.classList.remove('hidden');
+        document.body.classList.add('achievement-flash');
+        setTimeout(() => {
+            document.body.classList.remove('achievement-flash');
+            el.classList.add('hidden');
+        }, 3000);
+    }
+
+    function renderAchievements() {
+        const list = document.getElementById('achievementsList');
+        if (!list) return;
+
+        list.innerHTML = ACHIEVEMENTS_DEF.map(ach => {
+            const unlocked = persistentState.achievements.includes(ach.id);
+            return `
+                <div class="p-2 rounded border ${unlocked ? 'border-cyber-reward bg-opacity-10' : 'border-gray-700 opacity-40'}"
+                     style="${unlocked ? 'background:rgba(255,238,0,0.08)' : ''}">
+                    <div class="flex items-center gap-2">
+                        <span>${unlocked ? ach.icon : '🔒'}</span>
+                        <div>
+                            <div class="${unlocked ? 'neon-reward' : 'text-gray-500'} font-bold">${ach.name}</div>
+                            <div class="text-[10px] text-gray-500">${ach.desc}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // ==================== GAME CONTROL ====================
+    function startGame(daily) {
+        isDailyMode = daily;
+        createBoard();
+        score = 0;
+        level = 1;
+        lines = 0;
+        combo = 0;
+        maxCombo = 0;
+        energy = 0;
+        sessionLines = 0;
+        dropTimer = 0;
+        lastTime = 0;
+        ghostMode = false;
+        slowMode = false;
+        activePowerUp = null;
+        particles = [];
+        lineFlashes = [];
+        landingGlow = null;
+        sessionNewAchievements = [];
+        pieceBag = [];
+        gameStartTime = Date.now();
+        gamePaused = false;
+        gameRunning = true;
+
+        if (daily) {
+            const today = new Date();
+            const dateStr = today.getFullYear().toString() +
+                String(today.getMonth() + 1).padStart(2, '0') +
+                String(today.getDate()).padStart(2, '0');
+            dailySeed = dateToSeed(dateStr);
+            rngState = dailySeed;
+        }
+
+        nextPieceType = getNextPieceType();
+        currentPiece = createPiece(getNextPieceType());
+        drawNextPiece();
+
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('gameOverOverlay').style.display = 'none';
+        document.getElementById('pauseOverlay').style.display = 'none';
+
+        resizeGameCanvas();
+        updateHUD();
+        renderAchievements();
+
+        if (animFrame) cancelAnimationFrame(animFrame);
+        animFrame = requestAnimationFrame(update);
+    }
+
+    function pauseGame() {
+        if (!gameRunning) return;
+        gamePaused = true;
+        document.getElementById('pauseOverlay').style.display = 'flex';
+    }
+
+    function resumeGame() {
+        if (!gameRunning) return;
+        gamePaused = false;
+        lastTime = 0;
+        document.getElementById('pauseOverlay').style.display = 'none';
+        animFrame = requestAnimationFrame(update);
+    }
+
+    function togglePause() {
+        if (gamePaused) resumeGame();
+        else pauseGame();
+    }
+
+    function gameOver() {
+        gameRunning = false;
+        gamePaused = false;
+        if (animFrame) cancelAnimationFrame(animFrame);
+
+        // Update persistent stats
+        const elapsed = (Date.now() - gameStartTime) / 1000;
+        persistentState.totalGames++;
+        persistentState.totalLines += sessionLines;
+        persistentState.totalTime += elapsed;
+        if (score > persistentState.highScore) persistentState.highScore = score;
+        if (maxCombo > persistentState.bestCombo) persistentState.bestCombo = maxCombo;
+        if (level > persistentState.bestLevel) persistentState.bestLevel = level;
+
+        // Daily challenge tracking
+        if (isDailyMode) {
+            const today = new Date();
+            const dateStr = today.getFullYear().toString() +
+                String(today.getMonth() + 1).padStart(2, '0') +
+                String(today.getDate()).padStart(2, '0');
+            persistentState.dailyScores[dateStr] = Math.max(persistentState.dailyScores[dateStr] || 0, score);
+            persistentState.dailyCompleted = Object.keys(persistentState.dailyScores).length;
+            if (persistentState.dailyCompleted >= 3) unlockAchievement('daily3');
+        }
+
+        // Global achievements
+        if (persistentState.totalLines >= 100) unlockAchievement('century');
+        if (persistentState.totalTime >= 3600) unlockAchievement('dedicated');
+        if (elapsed >= 900) unlockAchievement('marathon');
+
+        savePersistentState();
+
+        // Show game over screen
+        const goStats = document.getElementById('goStats');
+        const elapsedMin = Math.floor(elapsed / 60);
+        const elapsedSec = Math.floor(elapsed % 60);
+        goStats.innerHTML = `
+            <div class="flex justify-between"><span class="text-gray-400">Score</span><span class="neon-core font-bold">${score.toLocaleString()}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Level</span><span class="neon-facility font-bold">${level}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Lines</span><span class="neon-rare font-bold">${sessionLines}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Max Combo</span><span class="neon-energy font-bold">${maxCombo}x</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Time</span><span class="text-white">${elapsedMin}:${String(elapsedSec).padStart(2, '0')}</span></div>
+            ${score >= persistentState.highScore ? '<div class="text-cyber-reward font-bold mt-2">🏆 NEW HIGH SCORE!</div>' : ''}
+        `;
+
+        // Show new achievements
+        const goNewAch = document.getElementById('goNewAchievements');
+        const goAchList = document.getElementById('goAchievementList');
+        if (sessionNewAchievements.length > 0) {
+            goNewAch.classList.remove('hidden');
+            goAchList.innerHTML = sessionNewAchievements.map(a =>
+                `<div class="text-xs neon-reward">${a.icon} ${a.name}</div>`
+            ).join('');
+        } else {
+            goNewAch.classList.add('hidden');
+        }
+
+        // Daily challenge section
+        const goDailySection = document.getElementById('goDailySection');
+        if (isDailyMode) {
+            goDailySection.classList.remove('hidden');
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('goDailyInfo').textContent = `${dateStr} — Score: ${score.toLocaleString()}`;
+        } else {
+            goDailySection.classList.add('hidden');
+        }
+
+        document.getElementById('gameOverOverlay').style.display = 'flex';
+    }
+
+    function showStats() {
+        const content = document.getElementById('statsContent');
+        const timeMin = Math.floor(persistentState.totalTime / 60);
+        const unlockedCount = persistentState.achievements.length;
+        content.innerHTML = `
+            <div class="flex justify-between"><span class="text-gray-400">High Score</span><span class="neon-core font-bold">${persistentState.highScore.toLocaleString()}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Total Games</span><span class="text-white font-bold">${persistentState.totalGames}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Total Lines</span><span class="text-white font-bold">${persistentState.totalLines.toLocaleString()}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Best Combo</span><span class="neon-energy font-bold">${persistentState.bestCombo}x</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Best Level</span><span class="neon-facility font-bold">${persistentState.bestLevel}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Play Time</span><span class="text-white">${timeMin} min</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Achievements</span><span class="neon-reward font-bold">${unlockedCount}/${ACHIEVEMENTS_DEF.length}</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Daily Challenges</span><span class="text-white">${persistentState.dailyCompleted}</span></div>
+        `;
+        document.getElementById('statsOverlay').style.display = 'flex';
+    }
+
+    function shareScore() {
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        const text = `🎮 Neon Tetris — Daily Challenge ${dateStr}\n🏆 Score: ${score.toLocaleString()}\n📊 Level: ${level} | Lines: ${sessionLines} | Combo: ${maxCombo}x\n\nPlay free at playpixelcraft.com/games/neon-tetris/`;
+        navigator.clipboard.writeText(text).then(() => {
+            showPowerUpNotification('📋 Copied to clipboard!', '#00FF88');
+        }).catch(() => {
+            showPowerUpNotification('❌ Copy failed', '#FF0040');
+        });
+    }
+
+    // ==================== INPUT HANDLING ====================
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+            case 'ArrowLeft': case 'a': case 'A':
+                e.preventDefault(); moveLeft(); break;
+            case 'ArrowRight': case 'd': case 'D':
+                e.preventDefault(); moveRight(); break;
+            case 'ArrowUp': case 'w': case 'W':
+                e.preventDefault(); rotatePiece(); break;
+            case 'ArrowDown': case 's': case 'S':
+                e.preventDefault(); softDrop(); break;
+            case ' ':
+                e.preventDefault(); hardDrop(); break;
+            case 'p': case 'P':
+                e.preventDefault(); togglePause(); break;
+        }
+    });
+
+    // Mobile virtual buttons
+    document.getElementById('btnLeft').addEventListener('click', (e) => { e.preventDefault(); moveLeft(); });
+    document.getElementById('btnRight').addEventListener('click', (e) => { e.preventDefault(); moveRight(); });
+    document.getElementById('btnRotate').addEventListener('click', (e) => { e.preventDefault(); rotatePiece(); });
+    document.getElementById('btnDown').addEventListener('click', (e) => { e.preventDefault(); softDrop(); });
+    document.getElementById('btnDrop').addEventListener('click', (e) => { e.preventDefault(); hardDrop(); });
+    document.getElementById('mPauseBtn').addEventListener('click', (e) => { e.preventDefault(); togglePause(); });
+    document.getElementById('dPauseBtn').addEventListener('click', (e) => { e.preventDefault(); togglePause(); });
+
+    // Touch swipe on game canvas
+    gameCanvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+        }
+    }, { passive: true });
+
+    gameCanvas.addEventListener('touchend', (e) => {
+        const dt = Date.now() - touchStartTime;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < 10 && absDy < 10 && dt < 300) {
+            // Tap = hard drop
+            hardDrop();
+            return;
+        }
+
+        if (absDx > absDy && absDx > 30) {
+            if (dx > 0) moveRight();
+            else moveLeft();
+        } else if (absDy > 30) {
+            if (dy < 0) rotatePiece();
+            else softDrop();
+        }
+    }, { passive: true });
+
+    // UI buttons
+    document.getElementById('btnNormal').addEventListener('click', () => startGame(false));
+    document.getElementById('btnDaily').addEventListener('click', () => startGame(true));
+    document.getElementById('btnStats').addEventListener('click', showStats);
+    document.getElementById('btnCloseStats').addEventListener('click', () => {
+        document.getElementById('statsOverlay').style.display = 'none';
+    });
+    document.getElementById('btnResume').addEventListener('click', resumeGame);
+    document.getElementById('btnRestart').addEventListener('click', () => startGame(isDailyMode));
+    document.getElementById('btnMenu').addEventListener('click', () => {
+        document.getElementById('gameOverOverlay').style.display = 'none';
+        document.getElementById('startScreen').style.display = 'flex';
+    });
+    document.getElementById('btnShare').addEventListener('click', shareScore);
+
+    // ==================== INITIALIZATION ====================
+    function init() {
+        resizeCanvases();
+        window.addEventListener('resize', resizeCanvases);
+        renderAchievements();
+
+        // Initial render of empty board
+        createBoard();
+        resizeGameCanvas();
+        render();
+
+        // Data rain loop (always running for background ambiance)
+        function rainLoop() {
+            updateRain();
+            requestAnimationFrame(rainLoop);
+        }
+        rainLoop();
+    }
+
+    init();
+    </script>
+
+<!-- SEO Footer -->
+<section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800">
+    <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Neon Tetris</h2>
+    <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon Tetris is a free online cyberpunk-themed block puzzle game that reimagines the classic Tetris experience with stunning neon visuals and modern gameplay mechanics. Guide falling tetromino blocks onto a 10×20 grid, rotate and position them to complete horizontal lines, and watch them shatter in dazzling particle effects. Built as a pure HTML5 browser game, Neon Tetris requires no downloads, no installs, and no sign-ups — just open and play instantly on any device, whether desktop, tablet, or mobile phone. The game features a deep combo system that rewards consecutive line clears with score multipliers up to 3x, an energy-based power-up system with three unique abilities (Ghost Mode, Burn Row, and Slow Motion), a daily challenge mode with seeded random sequences so every player faces the same block sequence each day, and 10 unlockable achievements to track your progression. Your high scores, achievements, and lifetime statistics are automatically saved to your browser's localStorage, so your progress persists between sessions. With its eye-catching cyberpunk aesthetic — including a dark grid background, glowing neon blocks in seven distinct colors, scanline overlays, data rain animation, and glass-morphism UI panels — Neon Tetris delivers the perfect blend of nostalgic block puzzle gameplay and futuristic visual flair. Whether you're a Tetris veteran chasing high scores or a casual player looking for a quick free browser game, Neon Tetris on PlayPixelCraft offers endless entertainment.</p>
+    <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
+    <ul class="text-gray-400 text-sm space-y-1 mb-4">
+        <li>• <strong>Desktop:</strong> Arrow keys to move (← →), Up arrow to rotate, Down arrow for soft drop, Space for hard drop, P to pause</li>
+        <li>• <strong>Mobile:</strong> Use the on-screen virtual buttons or swipe gestures — swipe left/right to move, swipe up to rotate, swipe down for soft drop, tap for hard drop</li>
+        <li>• Complete horizontal lines to clear them and earn points</li>
+        <li>• Consecutive line clears build combos for score multipliers (up to 3x)</li>
+        <li>• Fill the energy bar by clearing lines to unlock random power-ups</li>
+        <li>• Try the Daily Challenge for a fixed sequence and compete with friends</li>
+        <li>• Unlock 10 achievements and track your lifetime statistics</li>
+    </ul>
+    <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">Scoring System</h3>
+    <ul class="text-gray-400 text-sm space-y-1 mb-4">
+        <li>• 1 Line: 100 × Level · 2 Lines: 300 × Level · 3 Lines: 500 × Level · 4 Lines (Tetris): 800 × Level</li>
+        <li>• Soft Drop: +1 per cell · Hard Drop: +2 per cell</li>
+        <li>• Combo multiplier: 2-combo ×1.5, 3-combo ×2, 4+ combo ×3</li>
+        <li>• Level up every 10 lines cleared — speed increases each level</li>
+    </ul>
+    <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
+</section>
+</body>
+</html>

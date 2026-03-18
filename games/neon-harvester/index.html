@@ -95,6 +95,9 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
+        @media (max-width: 1023px) {
+            body { overflow-y: auto; overflow-x: hidden; }
+        }
 
         /* Neon glow effects */
         .neon-core { color: #00FFFF; text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF; }
@@ -183,6 +186,10 @@
         #coreCanvas {
             cursor: pointer;
             transition: transform 0.1s;
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            aspect-ratio: 1;
         }
         #coreCanvas:hover { transform: scale(1.05); }
         #coreCanvas:active { transform: scale(0.9); }
@@ -196,6 +203,16 @@
         .progress-fill {
             background: linear-gradient(90deg, #00FFFF, #00FF88);
             transition: width 0.3s;
+        }
+
+        /* Mobile HUD compact */
+        @media (max-width: 639px) {
+            .glass.fixed.top-0 { padding: 8px 12px; }
+            .glass.fixed.top-0 .flex { gap: 8px; }
+            .glass.fixed.top-0 .text-2xl { font-size: 1.125rem; }
+            .glass.fixed.top-0 .text-xl { font-size: 0.875rem; }
+            .glass.fixed.top-0 .text-xs { font-size: 0.625rem; }
+            #achievementsBtn { padding: 4px 8px; font-size: 0.75rem; }
         }
 
         /* Lock icon */
@@ -212,7 +229,7 @@
         @media (min-width: 1024px) {
             .game-layout {
                 display: grid;
-                grid-template-columns: 300px 1fr 300px;
+                grid-template-columns: 280px 1fr 280px;
                 gap: 20px;
                 height: calc(100vh - 100px);
             }
@@ -221,7 +238,39 @@
             .game-layout {
                 display: flex;
                 flex-direction: column;
+                align-items: center;
+                padding: 90px 12px 16px;
+                gap: 12px;
             }
+            /* Canvas container */
+            .game-layout > .core-area {
+                order: 1;
+                flex-shrink: 0;
+                width: 100%;
+                max-width: 320px;
+            }
+            #coreCanvas {
+                max-width: 320px;
+            }
+            /* Facilities */
+            .game-layout > .facilities-panel {
+                order: 2;
+                width: 100%;
+                max-width: 500px;
+                max-height: none;
+                flex: none;
+            }
+            /* Achievements hidden on mobile, use button to open modal */
+            .game-layout > .achievements-panel {
+                display: none !important;
+            }
+            .facilities-panel h2 { font-size: 0.875rem; margin-bottom: 8px; }
+            .facilities-panel .space-y-3 > div { padding: 8px; }
+        }
+        @media (max-width: 380px) {
+            .game-layout { padding: 80px 8px 12px; }
+            #coreCanvas { max-width: 260px; }
+            .game-layout > .core-area { max-width: 260px; }
         }
 
         /* Data rain effect */
@@ -275,9 +324,15 @@
     </div>
 
     <!-- Main game area -->
-    <div class="game-layout pt-24 pb-4 px-4">
-        <!-- Facilities panel (left on desktop, bottom on mobile) -->
-        <div class="glass rounded-lg p-4 overflow-y-auto" style="max-height: calc(100vh - 140px);">
+    <div class="game-layout">
+        <!-- Core canvas (center on desktop, top on mobile) -->
+        <div class="flex flex-col items-center justify-center relative core-area">
+            <canvas id="coreCanvas" width="400" height="400"></canvas>
+            <div id="clickFeedback" class="absolute pointer-events-none"></div>
+        </div>
+
+        <!-- Facilities panel (left on desktop, below canvas on mobile) -->
+        <div class="glass rounded-lg p-4 overflow-y-auto facilities-panel" style="max-height: calc(100vh - 140px);">
             <h2 class="text-lg neon-facility mb-4 flex items-center gap-2">
                 <span>⚙️</span> FACILITIES
             </h2>
@@ -286,14 +341,8 @@
             </div>
         </div>
 
-        <!-- Core canvas (center) -->
-        <div class="flex flex-col items-center justify-center relative">
-            <canvas id="coreCanvas" width="400" height="400" class="max-w-full"></canvas>
-            <div id="clickFeedback" class="absolute pointer-events-none"></div>
-        </div>
-
         <!-- Achievements panel (right on desktop, hidden on mobile) -->
-        <div class="glass rounded-lg p-4 overflow-y-auto hidden lg:block" style="max-height: calc(100vh - 140px);">
+        <div class="glass rounded-lg p-4 overflow-y-auto achievements-panel hidden lg:block" style="max-height: calc(100vh - 140px);">
             <h2 class="text-lg neon-reward mb-4 flex items-center gap-2">
                 <span>🏆</span> ACHIEVEMENTS
             </h2>
@@ -725,7 +774,17 @@
         }
 
         // ==================== INTERACTIONS ====================
+        function handleCanvasResize() {
+            const rect = canvas.getBoundingClientRect();
+            const displaySize = Math.round(rect.width);
+            if (canvas.width !== displaySize) {
+                canvas.width = displaySize;
+                canvas.height = displaySize;
+            }
+        }
+
         function handleClick(e) {
+            handleCanvasResize();
             const now = Date.now();
             const comboResetTime = 2000; // 2 seconds to maintain combo
             
@@ -746,8 +805,12 @@
 
             // Visual effects
             const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches?.[0]?.clientX || rect.left + rect.width / 2) - rect.left;
-            const y = (e.clientY || e.touches?.[0]?.clientY || rect.top + rect.height / 2) - rect.top;
+            const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : rect.left + rect.width / 2);
+            const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : rect.top + rect.height / 2);
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
 
             // Add ripple
             ripples.push({ time: Date.now() });
@@ -814,12 +877,13 @@
                 document.getElementById('achievementsModal').classList.add('hidden');
             });
 
-            window.addEventListener('resize', resizeRainCanvas);
+            window.addEventListener('resize', () => { resizeRainCanvas(); handleCanvasResize(); });
 
             // Auto-save every 30 seconds
             setInterval(saveGame, 30000);
 
             // Start game loop
+            handleCanvasResize();
             gameLoop();
         }
 

@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Neon 2048 - Cyberpunk Number Puzzle | PlayPixelCraft</title>
-<meta name="description" content="Play Neon 2048 — a cyberpunk-themed number puzzle game. Slide, merge, and reach 2048 in this free HTML5 browser game. Multiple difficulty levels and time attack mode.">
+<meta name="description" content="Play Neon 2048 — a cyberpunk-themed number puzzle game. Slide, merge, and reach 2048 in this free HTML5 browser game. Multiple difficulty levels, time attack mode, daily challenges, and achievements.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Neon 2048 - Cyberpunk Number Puzzle | PlayPixelCraft">
-<meta property="og:description" content="Slide and merge tiles in this neon-themed 2048 puzzle. Free browser game with multiple difficulty modes.">
+<meta property="og:description" content="Slide and merge tiles in this neon-themed 2048 puzzle. Free browser game with achievements, daily challenges, and multiple difficulty modes.">
 <meta property="og:image" content="https://playpixelcraft.com/games/neon-2048/thumb.svg">
 <meta property="og:url" content="https://playpixelcraft.com/games/neon-2048/">
 <link rel="canonical" href="https://playpixelcraft.com/games/neon-2048/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"VideoGame","name":"Neon 2048","description":"Cyberpunk-themed 2048 number puzzle game. Slide and merge tiles to reach 2048.","genre":"Puzzle","gamePlatform":"Web Browser","applicationCategory":"Game","operatingSystem":"Any","url":"https://playpixelcraft.com/games/neon-2048/","image":"https://playpixelcraft.com/games/neon-2048/thumb.svg","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"PlayPixelCraft","url":"https://playpixelcraft.com"}}
+{"@context":"https://schema.org","@type":"VideoGame","name":"Neon 2048","description":"Cyberpunk-themed 2048 number puzzle game with achievements, daily challenges, and multiple difficulty modes. Slide and merge tiles to reach 2048.","genre":"Puzzle","gamePlatform":"Web Browser","applicationCategory":"Game","operatingSystem":"Any","url":"https://playpixelcraft.com/games/neon-2048/","image":"https://playpixelcraft.com/games/neon-2048/thumb.svg","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"PlayPixelCraft","url":"https://playpixelcraft.com"}}
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -38,6 +38,58 @@
   .confetti { position: fixed; pointer-events: none; z-index: 100; }
   .scanline { background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,255,0.015) 2px, rgba(0,255,255,0.015) 4px); }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 100px; } }
+
+  /* Start screen overlay */
+  .start-overlay {
+    position: fixed; inset: 0; background: rgba(5,5,20,0.96); z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .start-overlay.hidden { display: none; }
+  .glass-btn {
+    padding: 12px 32px; border-radius: 8px; font-weight: bold; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+    transition: all 0.2s; color: #0ff;
+  }
+  .glass-btn:hover { background: rgba(0,255,255,0.15); border-color: #0ff; }
+  .glass-btn.gold { color: #ffee00; }
+  .glass-btn.gold:hover { background: rgba(255,238,0,0.15); border-color: #ffee00; }
+  .glass-btn.sm { padding: 8px 20px; font-size: 13px; }
+
+  /* Achievement notification */
+  #achievementNotif {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(10,10,30,0.95); border: 1px solid #ffee00;
+    border-radius: 12px; padding: 12px 24px; z-index: 300;
+    box-shadow: 0 0 20px rgba(255,238,0,0.3), 0 0 40px rgba(255,238,0,0.1);
+    animation: achSlideIn 0.4s ease-out;
+  }
+  #achievementNotif.hidden { display: none; }
+  @keyframes achSlideIn {
+    from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+
+  /* Achievement panel overlay */
+  .ach-overlay {
+    position: fixed; inset: 0; background: rgba(5,5,20,0.9); z-index: 250;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ach-overlay.hidden { display: none; }
+
+  /* Daily challenge badge */
+  .daily-badge {
+    display: inline-block; background: linear-gradient(90deg, #ff00ff44, #00ffff44);
+    border: 1px solid #ff00ff; border-radius: 4px; padding: 2px 8px;
+    font-size: 11px; color: #ff00ff;
+  }
+
+  /* Achievement flash */
+  .achievement-flash { animation: achFlash 0.6s ease-out; }
+  @keyframes achFlash {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(1.3) saturate(1.2); }
+    100% { filter: brightness(1); }
+  }
 </style>
 </head>
 <body class="text-white min-h-screen flex flex-col items-center">
@@ -50,6 +102,39 @@
 
 <!-- Floating text container -->
 <div id="floatContainer" class="fixed inset-0 pointer-events-none z-50"></div>
+
+<!-- Achievement notification -->
+<div id="achievementNotif" class="hidden">
+  <div class="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Achievement Unlocked</div>
+  <div id="achNotifText" class="text-lg font-bold" style="color:#ffee00;text-shadow:0 0 10px #ffee00;"></div>
+  <div id="achNotifDesc" class="text-xs text-gray-400 mt-1"></div>
+</div>
+
+<!-- Start screen -->
+<div id="startScreen" class="start-overlay hidden">
+  <div class="text-center px-6">
+    <h1 class="text-4xl md:text-5xl font-bold neon-text mb-1">NEON 2048</h1>
+    <p class="text-cyan-400 text-sm mb-8 opacity-70" style="text-shadow:0 0 5px #0ff;">CYBERPUNK NUMBER PUZZLE</p>
+    <div class="flex flex-col gap-3 items-center">
+      <button onclick="startFromMenu(false)" class="glass-btn text-lg">▶ PLAY</button>
+      <button onclick="startFromMenu(true)" class="glass-btn gold sm">📅 DAILY CHALLENGE</button>
+      <button onclick="showAchievements()" class="glass-btn sm" style="color:#888;">🏆 ACHIEVEMENTS</button>
+    </div>
+    <p class="text-gray-600 text-xs mt-8">↑↓←→ / WASD / Swipe to move</p>
+  </div>
+</div>
+
+<!-- Achievement panel -->
+<div id="achOverlay" class="ach-overlay hidden" onclick="hideAchievements()">
+  <div class="neon-border bg-gray-950 rounded-xl p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold neon-text-gold">🏆 ACHIEVEMENTS</h2>
+      <button onclick="hideAchievements()" class="text-gray-500 hover:text-white text-xl">✕</button>
+    </div>
+    <div id="achProgress" class="text-xs text-gray-500 mb-4"></div>
+    <div id="achList" class="space-y-2"></div>
+  </div>
+</div>
 
 <div class="w-full max-w-lg mx-auto px-4 py-4 relative z-10 flex flex-col min-h-screen">
 
@@ -98,16 +183,34 @@
       <div id="gridBg"></div>
       <div id="tileContainer" class="absolute inset-2"></div>
       <div id="gameOverOverlay" class="game-over-overlay hidden">
-        <div class="text-center">
+        <div class="text-center px-4">
           <div class="text-2xl font-bold neon-text-red mb-2">SYSTEM OFFLINE</div>
-          <div id="finalScore" class="text-gray-400 mb-3">Score: 0</div>
+          <div id="finalScore" class="text-gray-400 mb-2">Score: 0</div>
+          <div id="goDailySection" class="mb-3 hidden">
+            <div class="daily-badge mb-2">DAILY CHALLENGE</div>
+            <div id="goDailyInfo" class="text-sm text-gray-300 mb-2"></div>
+            <button onclick="shareDailyScore()" class="glass-btn sm" style="font-size:11px;">📋 Copy Score</button>
+          </div>
+          <div id="goNewAchievements" class="mb-3 hidden">
+            <div class="text-[10px] uppercase tracking-widest mb-2" style="color:#ffee00;">NEW ACHIEVEMENTS</div>
+            <div id="goAchievementList" class="space-y-1"></div>
+          </div>
           <button onclick="newGame()" class="px-6 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">REBOOT</button>
         </div>
       </div>
       <div id="winOverlay" class="game-over-overlay hidden">
-        <div class="text-center">
+        <div class="text-center px-4">
           <div class="text-2xl font-bold neon-text-gold mb-2">🎯 TARGET REACHED!</div>
-          <div id="winScore" class="text-gray-400 mb-3">Score: 0</div>
+          <div id="winScore" class="text-gray-400 mb-2">Score: 0</div>
+          <div id="winDailySection" class="mb-3 hidden">
+            <div class="daily-badge mb-2">DAILY CHALLENGE</div>
+            <div id="winDailyInfo" class="text-sm text-gray-300 mb-2"></div>
+            <button onclick="shareDailyScore()" class="glass-btn sm" style="font-size:11px;">📋 Copy Score</button>
+          </div>
+          <div id="winNewAchievements" class="mb-3 hidden">
+            <div class="text-[10px] uppercase tracking-widest mb-2" style="color:#ffee00;">NEW ACHIEVEMENTS</div>
+            <div id="winAchievementList" class="space-y-1"></div>
+          </div>
           <div class="flex gap-3 justify-center">
             <button onclick="continueGame()" class="px-4 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#00ffff,#00ff88);">CONTINUE</button>
             <button onclick="newGame()" class="px-4 py-2 rounded font-bold text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">NEW GAME</button>
@@ -121,6 +224,7 @@
   <div class="flex gap-3 justify-center mb-3">
     <button onclick="newGame()" class="px-5 py-2 rounded font-bold text-sm text-black" style="background:linear-gradient(90deg,#ff00ff,#00ffff);">NEW GAME</button>
     <button onclick="undoMove()" id="undoBtn" class="px-5 py-2 rounded font-bold text-sm border border-gray-600 text-gray-400 hover:border-cyan-400 hover:text-cyan-400 transition disabled:opacity-30" disabled>↩ UNDO</button>
+    <button onclick="showAchievements()" class="px-5 py-2 rounded font-bold text-sm border border-gray-600 text-gray-400 hover:border-yellow-400 hover:text-yellow-400 transition">🏆</button>
   </div>
 
   <!-- Hint -->
@@ -142,7 +246,7 @@
   <!-- SEO Section -->
   <section class="max-w-2xl mx-auto px-4 py-8 border-t border-gray-800 mt-auto">
     <h2 class="text-xl font-bold mb-3" style="color:#0ff;text-shadow:0 0 10px #0ff;">About Neon 2048</h2>
-    <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon 2048 is a cyberpunk-themed take on the classic number puzzle that has captivated millions of players worldwide. Slide tiles across the grid, merge matching numbers, and work your way up to the legendary 2048 tile — all wrapped in stunning neon visuals and pulse-pounding electronic aesthetics. Choose between three difficulty levels: the classic 4×4 Standard grid, the expansive 5×5 Challenge mode, or the massive 6×6 Expert board for seasoned veterans. If classic mode isn't intense enough, switch to Time Attack and race against a 3-minute countdown where every successful merge buys you 5 extra seconds. Built as a free HTML5 browser game, Neon 2048 runs instantly on any device — desktop, tablet, or mobile phone — with zero downloads, no installs, and no sign-ups required. Whether you're a 2048 veteran or discovering the puzzle for the first time, the satisfying merge mechanic, strategic depth, and addictive gameplay loop will keep you coming back for just one more round. Play Neon 2048 online now and test your number-crunching skills in the neon grid.</p>
+    <p class="text-gray-300 text-sm leading-relaxed mb-4">Neon 2048 is a cyberpunk-themed take on the classic number puzzle that has captivated millions of players worldwide. Slide tiles across the grid, merge matching numbers, and work your way up to the legendary 2048 tile — all wrapped in stunning neon visuals and pulse-pounding electronic aesthetics. Choose between three difficulty levels: the classic 4×4 Standard grid, the expansive 5×5 Challenge mode, or the massive 6×6 Expert board for seasoned veterans. If classic mode isn't intense enough, switch to Time Attack and race against a 3-minute countdown where every successful merge buys you 5 extra seconds. Track your progression with 10 unlockable achievements — from your first move to merging the elusive 4096 tile — and take on the Daily Challenge where every player faces the same tile sequence each day. Built as a free HTML5 browser game, Neon 2048 runs instantly on any device — desktop, tablet, or mobile phone — with zero downloads, no installs, and no sign-ups required. Whether you're a 2048 veteran or discovering the puzzle for the first time, the satisfying merge mechanic, strategic depth, and addictive gameplay loop will keep you coming back for just one more round. Play Neon 2048 online now and test your number-crunching skills in the neon grid.</p>
     <h3 class="text-lg font-bold mb-2" style="color:#0ff;text-shadow:0 0 8px #0ff;">How to Play</h3>
     <ul class="text-gray-400 text-sm space-y-1 mb-4">
       <li>• Use arrow keys, WASD, or swipe to slide all tiles in one direction</li>
@@ -150,6 +254,8 @@
       <li>• A new tile (2 or 4) appears after each move</li>
       <li>• Reach the target number to win — 2048, 4096, or 8192 depending on difficulty</li>
       <li>• In Time Attack mode, each merge adds +5 seconds to the countdown</li>
+      <li>• Try the Daily Challenge for a fixed sequence and compete with friends</li>
+      <li>• Unlock achievements by reaching milestones and completing challenges</li>
       <li>• Game ends when no moves are possible (or time runs out in Time Attack)</li>
     </ul>
     <p class="text-gray-600 text-xs">Play more free browser games at <a href="/" style="color:#0ff">PlayPixelCraft</a></p>
@@ -157,6 +263,199 @@
 </div>
 
 <script>
+// ==================== ACHIEVEMENTS ====================
+const ACHIEVEMENTS_DEF = [
+  { id: 'firstMove',  name: 'First Move',    icon: '👆', desc: 'Make your first move' },
+  { id: 'reach128',   name: 'Rising Star',   icon: '⭐', desc: 'Merge up to 128' },
+  { id: 'reach512',   name: 'Halfway There',  icon: '🔥', desc: 'Merge up to 512' },
+  { id: 'reach1024',  name: 'Power User',     icon: '⚡', desc: 'Merge up to 1024' },
+  { id: 'reach2048',  name: 'The Legend',      icon: '🏆', desc: 'Merge up to 2048' },
+  { id: 'reach4096',  name: 'Beyond Limits',  icon: '💎', desc: 'Merge up to 4096' },
+  { id: 'winGame',    name: 'Target Reached',  icon: '🎯', desc: 'Win a game' },
+  { id: 'perfectGame',name: 'Perfect Run',     icon: '✨', desc: 'Win with exactly 2048 (no higher tile)' },
+  { id: 'highScorer', name: 'High Scorer',     icon: '💰', desc: 'Score over 5,000 in a single game' },
+  { id: 'marathon',   name: 'Marathon Runner', icon: '🏃', desc: 'Complete 10 games total' },
+];
+
+// ==================== PERSISTENT STATE ====================
+const STATS_KEY = 'neon2048_stats';
+
+function loadStats() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATS_KEY));
+    return s || defaultStats();
+  } catch { return defaultStats(); }
+}
+
+function defaultStats() {
+  return {
+    achievements: [],
+    totalGames: 0,
+    bestScore: 0,
+    maxTile: 0,
+    dailyScores: {},
+    dailyCompleted: 0
+  };
+}
+
+function saveStats() {
+  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+}
+
+let stats = loadStats();
+
+// ==================== ACHIEVEMENT LOGIC ====================
+let sessionNewAchievements = [];
+
+function unlockAchievement(id) {
+  if (stats.achievements.includes(id)) return;
+  stats.achievements.push(id);
+  saveStats();
+
+  const ach = ACHIEVEMENTS_DEF.find(a => a.id === id);
+  if (ach) {
+    sessionNewAchievements.push(ach);
+    showAchievementNotification(ach);
+  }
+}
+
+function showAchievementNotification(ach) {
+  const el = document.getElementById('achievementNotif');
+  document.getElementById('achNotifText').textContent = `${ach.icon} ${ach.name}`;
+  document.getElementById('achNotifDesc').textContent = ach.desc;
+  el.classList.remove('hidden');
+  document.body.classList.add('achievement-flash');
+  setTimeout(() => {
+    document.body.classList.remove('achievement-flash');
+    el.classList.add('hidden');
+  }, 3000);
+}
+
+function checkAchievements() {
+  // First move
+  if (steps >= 1) unlockAchievement('firstMove');
+
+  // Max tile achievements
+  let maxTile = 0;
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (grid[r][c] > maxTile) maxTile = grid[r][c];
+
+  if (maxTile >= 128) unlockAchievement('reach128');
+  if (maxTile >= 512) unlockAchievement('reach512');
+  if (maxTile >= 1024) unlockAchievement('reach1024');
+  if (maxTile >= 2048) unlockAchievement('reach2048');
+  if (maxTile >= 4096) unlockAchievement('reach4096');
+
+  // Track max tile globally
+  if (maxTile > stats.maxTile) {
+    stats.maxTile = maxTile;
+    saveStats();
+  }
+
+  // High scorer
+  if (score >= 5000) unlockAchievement('highScorer');
+
+  // Marathon
+  if (stats.totalGames >= 10) unlockAchievement('marathon');
+}
+
+function renderGameAchievements() {
+  const el = document.getElementById('goAchievementList');
+  const winEl = document.getElementById('winAchievementList');
+  const html = sessionNewAchievements.map(a =>
+    `<div class="text-xs text-yellow-400" style="text-shadow:0 0 5px #ffee00;">${a.icon} ${a.name}</div>`
+  ).join('');
+
+  if (el) {
+    el.innerHTML = html;
+    document.getElementById('goNewAchievements').classList.toggle('hidden', sessionNewAchievements.length === 0);
+  }
+  if (winEl) {
+    winEl.innerHTML = html;
+    document.getElementById('winNewAchievements').classList.toggle('hidden', sessionNewAchievements.length === 0);
+  }
+}
+
+function showAchievements() {
+  const list = document.getElementById('achList');
+  const progress = document.getElementById('achProgress');
+  const unlocked = stats.achievements.length;
+  progress.textContent = `${unlocked} / ${ACHIEVEMENTS_DEF.length} unlocked`;
+
+  list.innerHTML = ACHIEVEMENTS_DEF.map(ach => {
+    const u = stats.achievements.includes(ach.id);
+    return `
+      <div class="p-2 rounded border ${u ? 'border-yellow-500' : 'border-gray-700'}" style="${u ? 'background:rgba(255,238,0,0.08)' : 'opacity:0.4'}">
+        <div class="flex items-center gap-2">
+          <span>${u ? ach.icon : '🔒'}</span>
+          <div>
+            <div class="font-bold ${u ? '' : 'text-gray-500'}" style="${u ? 'color:#ffee00;text-shadow:0 0 5px #ffee00;' : ''}">${ach.name}</div>
+            <div class="text-[10px] text-gray-500">${ach.desc}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('achOverlay').classList.remove('hidden');
+}
+
+function hideAchievements() {
+  document.getElementById('achOverlay').classList.add('hidden');
+}
+
+// ==================== DAILY CHALLENGE ====================
+let isDailyMode = false;
+let dailyDateStr = '';
+let rngState = 0;
+
+function seededRandom() {
+  rngState = (rngState * 1664525 + 1013904223) & 0xFFFFFFFF;
+  return (rngState >>> 0) / 0xFFFFFFFF;
+}
+
+function dateToSeed(dateStr) {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) || 1;
+}
+
+function getDailyDateStr() {
+  const d = new Date();
+  return d.getFullYear().toString() +
+    (d.getMonth() + 1).toString().padStart(2, '0') +
+    d.getDate().toString().padStart(2, '0');
+}
+
+function addSeededTile(g) {
+  const empty = getEmptyCells(g);
+  if (empty.length === 0) return null;
+  const idx = Math.floor(seededRandom() * empty.length);
+  const cell = empty[idx];
+  const fourChance = DIFFICULTIES[gridSize].fourChance;
+  g[cell.r][cell.c] = seededRandom() < fourChance ? 4 : 2;
+  return cell;
+}
+
+function saveDailyScore() {
+  if (!isDailyMode) return;
+  const key = dailyDateStr;
+  stats.dailyScores[key] = Math.max(stats.dailyScores[key] || 0, score);
+  stats.dailyCompleted = Object.keys(stats.dailyScores).length;
+  saveStats();
+}
+
+function shareDailyScore() {
+  const text = `🎮 Neon 2048 — Daily Challenge ${dailyDateStr}\n🏆 Score: ${score.toLocaleString()}\n📊 Grid: ${gridSize}×${gridSize} | Steps: ${steps}\n\nPlay free at playpixelcraft.com/games/neon-2048/`;
+  navigator.clipboard.writeText(text).then(() => {
+    showNotification('📋 Score copied to clipboard!');
+  }).catch(() => {
+    showNotification('Copy failed — try again');
+  });
+}
+
 // ==================== CONSTANTS ====================
 const DIFFICULTIES = {
   4: { name: 'Standard', target: 2048, fourChance: 0.1 },
@@ -201,6 +500,7 @@ let previousState = null;
 let timerInterval = null;
 let timeLeft = 180;
 let lbViewSize = 4;
+let gameStarted = false;
 
 function selectDifficulty(size) {
   if (size === gridSize) return;
@@ -234,6 +534,7 @@ function getEmptyCells(g) {
 }
 
 function addRandomTile(g) {
+  if (isDailyMode) return addSeededTile(g);
   const empty = getEmptyCells(g);
   if (empty.length === 0) return false;
   const cell = empty[Math.floor(Math.random() * empty.length)];
@@ -350,6 +651,9 @@ function move(direction) {
   }
 
   document.getElementById('undoBtn').disabled = false;
+
+  // Check achievements after each move
+  checkAchievements();
 
   renderGrid(newTile);
   updateHUD();
@@ -479,9 +783,20 @@ function stopTimer() {
 }
 
 // ==================== GAME FLOW ====================
-function newGame() {
-  if (score > 0 && !gameOver) {
-    // Confirm only if game in progress
+function startFromMenu(daily) {
+  isDailyMode = daily;
+  dailyDateStr = daily ? getDailyDateStr() : '';
+  if (daily) {
+    rngState = dateToSeed(dailyDateStr);
+    gridSize = 4; // Daily is always 4x4
+    document.querySelectorAll('[data-diff]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.diff) === 4));
+  }
+  newGame(daily);
+  document.getElementById('startScreen').classList.add('hidden');
+}
+
+function newGame(forceDaily) {
+  if (forceDaily === undefined && gameStarted && score > 0 && !gameOver) {
     if (!confirm('Start a new game? Current progress will be lost.')) return;
   }
 
@@ -493,12 +808,24 @@ function newGame() {
   gameWon = false;
   continueAfterWin = false;
   previousState = null;
+  sessionNewAchievements = [];
+  gameStarted = true;
+
+  // If called from menu, keep isDailyMode; otherwise reset it
+  if (forceDaily === undefined) {
+    isDailyMode = false;
+    dailyDateStr = '';
+  }
 
   const key = `neon2048_best_${gridSize}_${gameMode}`;
   best = parseInt(localStorage.getItem(key) || '0');
 
   document.getElementById('gameOverOverlay').classList.add('hidden');
   document.getElementById('winOverlay').classList.add('hidden');
+  document.getElementById('goDailySection').classList.add('hidden');
+  document.getElementById('winDailySection').classList.add('hidden');
+  document.getElementById('goNewAchievements').classList.add('hidden');
+  document.getElementById('winNewAchievements').classList.add('hidden');
   document.getElementById('undoBtn').disabled = true;
 
   // Timer UI
@@ -507,12 +834,18 @@ function newGame() {
 
   renderGridBackground();
 
-  addRandomTile(grid);
-  const newTile = addRandomTile(grid);
+  if (isDailyMode) {
+    // Seeded initial tiles
+    addSeededTile(grid);
+    const newTile = addSeededTile(grid);
+    renderGrid(newTile);
+  } else {
+    addRandomTile(grid);
+    const newTile = addRandomTile(grid);
+    renderGrid(newTile);
+  }
 
   if (gameMode === 'timed') startTimer();
-
-  renderGrid(newTile);
   updateHUD();
 }
 
@@ -539,6 +872,30 @@ function continueGame() {
 
 function onGameOver() {
   stopTimer();
+  gameOver = true;
+
+  // Update persistent stats
+  stats.totalGames++;
+  if (score > stats.bestScore) stats.bestScore = score;
+  saveStats();
+
+  // Save daily challenge score
+  if (isDailyMode) saveDailyScore();
+
+  // Check achievements one last time
+  checkAchievements();
+
+  // Show daily section
+  if (isDailyMode) {
+    document.getElementById('goDailySection').classList.remove('hidden');
+    document.getElementById('goDailyInfo').textContent = `${dailyDateStr} — Score: ${score.toLocaleString()}`;
+  } else {
+    document.getElementById('goDailySection').classList.add('hidden');
+  }
+
+  // Show new achievements
+  renderGameAchievements();
+
   document.getElementById('gameOverOverlay').classList.remove('hidden');
   document.getElementById('finalScore').textContent = `Score: ${formatNumber(score)} | Steps: ${steps}`;
 
@@ -550,6 +907,40 @@ function onGameOver() {
 
 function showWin() {
   stopTimer();
+
+  // Win achievement
+  unlockAchievement('winGame');
+
+  // Perfect game: win with exactly 2048 and no tile higher than 2048
+  let maxTile = 0;
+  const target = DIFFICULTIES[gridSize].target;
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (grid[r][c] > maxTile) maxTile = grid[r][c];
+  if (maxTile === target) unlockAchievement('perfectGame');
+
+  // Update persistent stats
+  stats.totalGames++;
+  if (score > stats.bestScore) stats.bestScore = score;
+  saveStats();
+
+  // Save daily challenge score
+  if (isDailyMode) saveDailyScore();
+
+  // Check all achievements
+  checkAchievements();
+
+  // Show daily section
+  if (isDailyMode) {
+    document.getElementById('winDailySection').classList.remove('hidden');
+    document.getElementById('winDailyInfo').textContent = `${dailyDateStr} — Score: ${score.toLocaleString()}`;
+  } else {
+    document.getElementById('winDailySection').classList.add('hidden');
+  }
+
+  // Show new achievements
+  renderGameAchievements();
+
   document.getElementById('winOverlay').classList.remove('hidden');
   document.getElementById('winScore').textContent = `Score: ${formatNumber(score)} | Steps: ${steps}`;
   showConfetti();
@@ -685,9 +1076,10 @@ function handleTouchEnd(e) {
 window.addEventListener('keydown', handleKey);
 document.addEventListener('touchstart', handleTouchStart, { passive: true });
 document.addEventListener('touchend', handleTouchEnd, { passive: true });
-window.addEventListener('resize', () => { renderGridBackground(); renderGrid(); });
+window.addEventListener('resize', () => { if (gameStarted) { renderGridBackground(); renderGrid(); } });
 
-newGame();
+// Show start screen on load
+document.getElementById('startScreen').classList.remove('hidden');
 </script>
 </body>
 </html>
